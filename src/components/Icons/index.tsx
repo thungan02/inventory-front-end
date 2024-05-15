@@ -25,6 +25,7 @@ import ImageUp from "@/components/Icons/ImageUp";
 import ArrowDown from "@/components/Icons/ArrowDown";
 import X from "@/components/Icons/X";
 import CircleHelp from "@/components/Icons/CircleHelp";
+import Info from "@/components/Icons/Info";
 export {
     Clock,
     Google,
@@ -53,4 +54,5 @@ export {
     ArrowDown,
     X,
     CircleHelp,
+    Info
 }

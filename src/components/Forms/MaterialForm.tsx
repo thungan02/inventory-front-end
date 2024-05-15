@@ -1,15 +1,20 @@
 "use client";
-import React, {useRef, useState} from 'react';
+import React, {FormEvent, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
-import {Eye, ImageUp, Trash} from "@/components/Icons";
+import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
 import SeachInput from "@/components/Inputs/SeachInput";
 import Image from "next/image";
+import TextArea from "@/components/Inputs/TextArea";
+import Tooltip from "@/components/comon/Tooltip";
+import Alert from "@/components/Alert";
 
 const ProductForm = () => {
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -45,8 +50,37 @@ const ProductForm = () => {
         newImages.splice(index, 0, draggedImage);
         setImages(newImages);
     }
+
+    const onSubmitCreateProduct = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const name : string = formData.get('name') as string;
+        const provider : string = formData.get('provider') as string;
+
+        if (name.trim() === '') {
+            setError('Tên nguyên vật liệu là bắt buộc');
+            return;
+        }
+        if (provider.trim() === '') {
+            setError('Nhà cung cấp là bắt buộc');
+            return;
+        }
+    }
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => {
+                setError(null);
+            }, 4000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
     return (
-        <React.Fragment>
+        <form onSubmit={onSubmitCreateProduct}>
+            {
+                error && <Alert message={error} type="error"/>
+            }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="border-b border-opacity-30">
@@ -57,7 +91,8 @@ const ProductForm = () => {
                     <Input label="Tên nguyên vật liệu" feedback="Tên nguyên vật liệu là bắt buộc"
                            placeholder="Nhập tên nguyên vật liệu"
                            type="text" name="name"/>
-                    <SeachInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp"/>
+
+                    <SeachInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp" name="provider"/>
 
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Xuất xứ" feedback="Xuất xứ của nguyên vật liệu"
@@ -86,18 +121,26 @@ const ProductForm = () => {
                             <option value="OUT_OF_STOCK">Hết hàng</option>
                         </Select>
                     </div>
+                    <div>
+                        <TextArea label="Ghi chú" placeholder="Nhập ghi chú" name="note" feedback=""/>
+                    </div>
                 </div>
 
             </div>
             <div
                 className="rounded-sm border border-stroke bg-white mt-5 px-5 pb-5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
                 <div className="border-b border-opacity-30 ">
-                    <span className="text-sm text-black-2 font-bold mb-3 block">Hình ảnh sản phẩm</span>
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className="text-sm text-black-2 font-bold block">Hình ảnh sản phẩm</span>
+                        <Tooltip message="Hình ảnh dạng jpg, png tỉ lệ 1:1 (hình vuông)">
+                            <CircleHelp stroke="#27c1f0"/>
+                        </Tooltip>
+                    </div>
                 </div>
                 <div className="border border-dotted rounded mt-5 py-5">
                     <div className="flex flex-col items-center">
                         <input type="file" ref={inputProductImage} className="hidden" accept="image/*"
-                               onChange={handleImageChange} multiple={true}/>
+                               onChange={handleImageChange}/>
 
                         <div className="flex gap-2">
                             {
@@ -155,7 +198,7 @@ const ProductForm = () => {
                     <span className="hidden xl:block">Lưu</span>
                 </button>
             </div>
-        </React.Fragment>
+        </form>
     );
 };
 

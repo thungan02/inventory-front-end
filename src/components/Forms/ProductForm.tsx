@@ -1,16 +1,18 @@
 "use client";
-import React, {useRef, useState} from 'react';
+import React, {FormEvent, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
 import Tooltip from "@/components/comon/Tooltip";
 import Image from "next/image";
 import Editor from "@/components/Inputs/Editor";
+import Alert from "@/components/Alert";
 
 const ProductForm = () => {
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -46,8 +48,33 @@ const ProductForm = () => {
         newImages.splice(index, 0, draggedImage);
         setImages(newImages);
     }
+
+    const onSubmitCreateProduct = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const name : string = formData.get('name') as string;
+
+        if (name.trim() === '') {
+            setError('Tên sản phẩm là bắt buộc');
+            return;
+        }
+    }
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => {
+                setError(null);
+            }, 4000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
     return (
-        <React.Fragment>
+        <form onSubmit={onSubmitCreateProduct}>
+            {
+                error && <Alert message={error} type="error"/>
+            }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="border-b border-opacity-30">
@@ -60,7 +87,7 @@ const ProductForm = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Giá sản phẩm" feedback="Giá là bắt buộc" placeholder="Nhập giá sản phẩm"
                                type="number"
-                                name="price" min={0}/>
+                               name="price" min={0}/>
                         <Input label="Số lượng" feedback="Số lượng hiện có là bắt buộc"
                                placeholder="Nhập số lượng sản phẩm"
                                type="number" name="quantity" min={0}/>
@@ -102,7 +129,7 @@ const ProductForm = () => {
                 <div className="border border-dotted rounded mt-5 py-5">
                     <div className="flex flex-col items-center">
                         <input type="file" ref={inputProductImage} className="hidden" accept="image/*"
-                               onChange={handleImageChange} multiple={true}/>
+                               onChange={handleImageChange}/>
 
                         <div className="flex gap-2">
                             {
@@ -156,11 +183,11 @@ const ProductForm = () => {
                     <span className="hidden xl:block">Hủy</span>
                 </button>
 
-                <button className="btn btn-blue text-sm inline-flex items-center gap-2">
+                <button type="submit" className="btn btn-blue text-sm inline-flex items-center gap-2">
                     <span className="hidden xl:block">Lưu</span>
                 </button>
             </div>
-        </React.Fragment>
+        </form>
     );
 };
 

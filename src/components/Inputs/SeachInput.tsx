@@ -4,6 +4,7 @@ import {ArrowDown, CirclePlus} from "@/components/Icons";
 interface SearchInputProps {
     label: string;
     placeholder: string;
+    name: string;
     options?: string[];
 }
 
@@ -25,7 +26,7 @@ const suppliers: string[] = [
     "An Thịnh",
 ];
 
-const SearchInput = ({label, placeholder, options = suppliers}: SearchInputProps) => {
+const SearchInput = ({label, placeholder, name, options = suppliers}: SearchInputProps) => {
     const id: string = useId();
     const [showDropdown, setShowDropdown] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>('');
@@ -79,6 +80,7 @@ const SearchInput = ({label, placeholder, options = suppliers}: SearchInputProps
                     className="block appearance-none w-full text-xs bg-gray-200 border border-gray-200 text-gray-700 py-2 px-4 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     type="text"
                     placeholder={placeholder}
+                    name={name}
                     onClick={() => setShowDropdown(true)}
                     ref={inputRef}
                     value={inputValue}
