@@ -1,11 +1,10 @@
-import React from 'react';
+import React, {useId} from 'react';
 
 interface InputProps {
     label: string;
     feedback: string;
     placeholder: string;
     type: "text" | "number" | "password" | "email";
-    id: string;
     name: string;
     error?: boolean;
     min?: number;
@@ -13,7 +12,8 @@ interface InputProps {
     required?: boolean;
 
 }
-const Input = ({label, feedback, placeholder, type, id, name, error = false, min, max, required=true}:InputProps) => {
+const Input = ({label, feedback, placeholder, type, name, error = false, min, max, required=true}:InputProps) => {
+    const id = useId();
     return (
         <div className="w-full mb-6">
             <label className="block tracking-wide text-gray-700 text-sm font-bold mb-2"

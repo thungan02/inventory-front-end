@@ -23,6 +23,8 @@ import PackageSearch from "@/components/Icons/PackageSearch";
 import LayoutGird from "@/components/Icons/LayoutGird";
 import ImageUp from "@/components/Icons/ImageUp";
 import ArrowDown from "@/components/Icons/ArrowDown";
+import X from "@/components/Icons/X";
+import CircleHelp from "@/components/Icons/CircleHelp";
 export {
     Clock,
     Google,
@@ -49,4 +51,6 @@ export {
     LayoutGird,
     ImageUp,
     ArrowDown,
+    X,
+    CircleHelp,
 }

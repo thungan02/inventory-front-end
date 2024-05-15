@@ -23,13 +23,13 @@ const ProductForm = () => {
                 <div className="py-2">
                     <Input label="Tên khách hàng" feedback="Tên khách hàng là bắt buộc"
                            placeholder="Nhập tên khách hàng"
-                           type="text" id="customer_name" name="name"/>
+                           type="text" name="name"/>
 
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Số điện thoại" feedback="Số điện thoại là bắt buộc"
                                placeholder="Nhập Số điện thoại"
                                type="text"
-                               id="customer_phone" name="phone"/>
+                               name="phone"/>
 
                         <Select label="Nhóm khách hàng" name="customes_group">
                             <option value="Khách hàng thân thiết" selected={true}>Khách hàng thân thiết</option>
@@ -42,12 +42,12 @@ const ProductForm = () => {
                         <Input label="Địa chỉ" feedback="Địa chỉ là bắt buộc"
                                placeholder="Nhập địa chỉ"
                                type="text"
-                               id="customer_address" name="address"/>
+                               name="address"/>
 
                         <Input label="Email" feedback="Email là bắt buộc"
                                placeholder="Nhập địa chỉ"
                                type="email"
-                               id="customer_email" name="email"/>
+                               name="email"/>
                     </div>
 
                     <div>

@@ -20,25 +20,25 @@ const ProductForm = () => {
                 </div>
                 <div className="py-2">
                     <Input label="Tên khách hàng" feedback="Tên sản phẩm là bắt buộc" placeholder="Nhập tên khách hàng"
-                           type="text" id="order_name" name="name"/>
+                           type="text" name="name"/>
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Địa chỉ" feedback="Địa chỉ là bắt buộc"
                                placeholder="Nhập địa chỉ"
                                type="text"
-                               id="order_address" name="order_address"/>
+                               name="order_address"/>
 
                         <Input label="Số điện thoại" feedback="Số điện thoại là bắt buộc"
                                placeholder="Nhập Số điện thoại"
                                type="text"
-                               id="order_phone" name="order_phone"/>
+                              name="order_phone"/>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         <Input label="Tên sản phẩm" feedback="Tên sản phẩm là bắt buộc" placeholder="Chọn tên sản phẩm"
-                               type="text" id="order_product_name" name="order_product_name"/>
+                               type="text" name="order_product_name"/>
                         <Input label="Khối lượng" feedback="Khối lượng là bắt buộc"
                                placeholder="Nhập khối lượng sản phẩm"
                                type="number"
-                               id="product_weight" name="weight" min={0}/>
+                               name="weight" min={0}/>
 
                         <Select label="Quy cách đóng hàng" name="packing">
                             <option value="Hũ thủy tinh" selected={true}>Hũ thủy tinh</option>
@@ -50,10 +50,10 @@ const ProductForm = () => {
                     <div className="grid grid-cols-3 gap-3">
                         <Input label="Đơn giá" feedback="" placeholder=""
                                type="number"
-                               id="order_product_price" name="order_product_price" min={0}/>
+                               name="order_product_price" min={0}/>
                         <Input label="Số lượng" feedback="Số lượng là bắt buộc"
                                placeholder="Nhập số lượng sản phẩm"
-                               type="number" id="order_product_quantity" name="order_product_quantity" min={0}/>
+                               type="number" name="order_product_quantity" min={0}/>
                         <Select label="Khuyến mãi" name="status">
                             <option value="IN_STOCK" selected={true}>Đang bán</option>
                             <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>

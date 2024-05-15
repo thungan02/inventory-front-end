@@ -56,23 +56,23 @@ const ProductForm = () => {
                 <div className="py-2">
                     <Input label="Tên nguyên vật liệu" feedback="Tên nguyên vật liệu là bắt buộc"
                            placeholder="Nhập tên nguyên vật liệu"
-                           type="text" id="material_name" name="name"/>
+                           type="text" name="name"/>
                     <SeachInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp"/>
 
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Xuất xứ" feedback="Xuất xứ của nguyên vật liệu"
                                placeholder="Xuất xứ"
-                               type="text" id="material_origin" name="quantity"/>
+                               type="text" name="quantity"/>
 
                         <Input label="Số lượng" feedback="Số lượng hiện có là bắt buộc"
                                placeholder="Nhập số lượng sản phẩm"
-                               type="number" id="product_quantity" name="quantity" min={0}/>
+                               type="number" name="quantity" min={0}/>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         <Input label="Khối lượng" feedback="Khối lượng là bắt buộc"
                                placeholder="Nhập khối lượng sản phẩm"
                                type="number"
-                               id="product_weight" name="weight" min={0}/>
+                               name="weight" min={0}/>
 
                         <Select label="Đơn vị" name="packing">
                             <option value="Thùng" selected={true}>Thùng</option>
