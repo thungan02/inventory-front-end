@@ -17,7 +17,7 @@ const ProductPage = () => {
         <DefaultLayout>
             <Modal isOpen={isOpenExportModal}  title="Xuất excel" onClose={() => setIsOpenExportModal(!isOpenExportModal)}>
                 <Input label="Giá sản phẩm" feedback="Tên sản phẩm là bắt buộc" placeholder="Nhập tên sản phẩm"
-                       type="number" name="price" min={0}/>
+                       type="number" name="price" min={0} value=""/>
             </Modal>
             <Breadcrumb pageName="Danh sách sản phẩm">
                 <div className="inline-flex gap-4">

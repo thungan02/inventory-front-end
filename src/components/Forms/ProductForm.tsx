@@ -7,12 +7,21 @@ import Tooltip from "@/components/comon/Tooltip";
 import Image from "next/image";
 import Editor from "@/components/Inputs/Editor";
 import Alert from "@/components/Alert";
+import {useRouter} from "next/navigation";
+import Link from "next/link";
+import {Product} from "@/models/Model";
 
-const ProductForm = () => {
+interface Props {
+    product?: Product;
+}
+const ProductForm = ({product} : Props) => {
+    const router = useRouter();
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [description, setDescription] = useState<string>("");
+
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -37,11 +46,11 @@ const ProductForm = () => {
         console.log(newImages);
     }
 
-    const handleDragStart = (index: number) => (event : React.DragEvent<HTMLDivElement>) => {
+    const handleDragStart = (index: number) => (event: React.DragEvent<HTMLDivElement>) => {
         event.dataTransfer.setData('index', index.toString());
     }
 
-    const handleDrag = (index: number) => (event : React.DragEvent<HTMLDivElement>) => {
+    const handleDrag = (index: number) => (event: React.DragEvent<HTMLDivElement>) => {
         const draggedIndex = Number(event.dataTransfer.getData("index"));
         const newImages = [...images];
         const [draggedImage] = newImages.splice(draggedIndex, 1);
@@ -49,14 +58,43 @@ const ProductForm = () => {
         setImages(newImages);
     }
 
-    const onSubmitCreateProduct = (event: FormEvent<HTMLFormElement>) => {
+    const onSubmitProductForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const name : string = formData.get('name') as string;
+        formData.append('description', description);
+        const name: string = formData.get('name') as string;
+        const sku: string = formData.get('sku') as string;
+        const packing: string = formData.get('packing') as string;
 
         if (name.trim() === '') {
             setError('Tên sản phẩm là bắt buộc');
             return;
+        }
+        if (sku.trim() === '') {
+            setError('Mã sản phẩm là bắt buộc');
+            return;
+        }
+        if (packing.trim() === '') {
+            setError('Quy cách đóng gói là bắt buộc');
+            return;
+        }
+
+        const method = (product ? "PUT" : "POST");
+        const response = await fetch(`http://localhost:8000/api/v1/products${product?.id ? "/" + product.id : ''}`,
+            {
+                    method: method,
+                    body: JSON.stringify(Object.fromEntries(formData)),
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                }
+        );
+
+
+        if (response.ok) {
+            router.push('/products');
+        } else {
+            console.log("that bai");
         }
     }
 
@@ -70,8 +108,12 @@ const ProductForm = () => {
         }
     }, [error]);
 
+    useEffect(() => {
+        setDescription(product?.description ? product.description : description);
+    }, [product]);
+
     return (
-        <form onSubmit={onSubmitCreateProduct}>
+        <form onSubmit={onSubmitProductForm}>
             {
                 error && <Alert message={error} type="error"/>
             }
@@ -82,37 +124,44 @@ const ProductForm = () => {
                 </div>
 
                 <div className="py-2">
-                    <Input label="Tên sản phẩm" feedback="Tên sản phẩm là bắt buộc" placeholder="Nhập tên sản phẩm"
-                           type="text" name="name"/>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Input label="Mã sản phẩm" feedback="Mã là bắt buộc" placeholder="Nhập mã sản phẩm"
+                               type="text" name="sku" defaultValue={product?.sku}/>
+                        <Input label="Tên sản phẩm" feedback="Tên sản phẩm là bắt buộc" placeholder="Nhập tên sản phẩm"
+                               type="text" name="name" defaultValue={product?.name}/>
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Giá sản phẩm" feedback="Giá là bắt buộc" placeholder="Nhập giá sản phẩm"
                                type="number"
+                               defaultValue={product?.price}
                                name="price" min={0}/>
                         <Input label="Số lượng" feedback="Số lượng hiện có là bắt buộc"
                                placeholder="Nhập số lượng sản phẩm"
+                               defaultValue={product?.quantity}
                                type="number" name="quantity" min={0}/>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         <Input label="Khối lượng" feedback="Khối lượng là bắt buộc"
                                placeholder="Nhập khối lượng sản phẩm"
                                type="number"
+                               defaultValue={product?.weight}
                                name="weight" min={0}/>
 
-                        <Select label="Quy cách đóng hàng" name="packing">
-                            <option value="Hũ thủy tinh" selected={true}>Hũ thủy tinh</option>
-                            <option value="Hũ nhựa">Hũ nhựa</option>
-                            <option value="Túi zip">Túi zip</option>
-                        </Select>
+                        <Input label="Quy cách đóng gói" feedback="Quy cách đóng gói là bắt buộc"
+                               placeholder="Nhập quy cách đóng gói"
+                               defaultValue={product?.packing}
+                               type="text" name="packing"/>
 
-                        <Select label="Trạng thái" name="status">
-                            <option value="IN_STOCK" selected={true}>Đang bán</option>
+                        <Select label="Trạng thái" name="status" defaultValue="IN_STOCK">
+                            <option value="IN_STOCK">Đang bán</option>
                             <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
                             <option value="OUT_OF_STOCK">Hết hàng</option>
                         </Select>
                     </div>
 
                     <div>
-                        <Editor placeholder="Nhập mô tả"/>
+                        <Editor placeholder="Nhập mô tả" content={description} setContent={setDescription}/>
                     </div>
                 </div>
             </div>
@@ -179,12 +228,12 @@ const ProductForm = () => {
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
-                <button className="btn btn-danger text-sm inline-flex items-center gap-2">
+                <Link href={"/products"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                     <span className="hidden xl:block">Hủy</span>
-                </button>
+                </Link>
 
                 <button type="submit" className="btn btn-blue text-sm inline-flex items-center gap-2">
-                    <span className="hidden xl:block">Lưu</span>
+                    <span className="hidden xl:block">{product ? "Cập nhật" : "Lưu"}</span>
                 </button>
             </div>
         </form>

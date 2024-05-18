@@ -8,7 +8,7 @@ interface Material {
     note: string;
     status: string;
     unit: string;
-    net_weight: string;
+    weight: string;
     quantity: number;
     origin: string;
     created_at: Date;
@@ -33,7 +33,7 @@ const TableMaterials = () => {
         getData();
     }, []);
 
-    const columns : string[] = ["ID", "Tên", "Khối lượng", "Đơn vị", "Số lượng", "Trạng thái", "Ghi chú", "Thời gian cập nhật", ""];
+    const columns : string[] = ["ID", "Tên", "Khối lượng","Số lượng", "Trạng thái", "Ghi chú", "Thời gian cập nhật", ""];
     return (
         <div
             className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -92,17 +92,12 @@ const TableMaterials = () => {
 
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <h5 className="font-medium text-black dark:text-white">
-                                    {material.net_weight}
+                                    {material.weight} kg
                                 </h5>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <h5 className="font-medium text-black dark:text-white">
-                                    {material.unit}
-                                </h5>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <h5 className="font-medium text-black dark:text-white">
-                                    {material.quantity}
+                                    {material.quantity + " " + material.unit}
                                 </h5>
                             </td>
 
@@ -133,7 +128,7 @@ const TableMaterials = () => {
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <div className="flex items-center space-x-3.5">
-                                    <button className="hover:text-primary"><Eye/></button>
+                                    <Link href={`/materials/${material.id}`} className="hover:text-primary"><Eye/></Link>
                                     <button className="hover:text-primary"><Trash/></button>
                                     {/*<button className="hover:text-primary"><ArrowDownToLine/></button>*/}
                                 </div>

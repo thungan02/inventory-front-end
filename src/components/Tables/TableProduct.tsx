@@ -1,20 +1,8 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
+import {Eye, Seach, Trash} from "@/components/Icons";
 import {useEffect, useState} from "react";
 import Link from "next/link";
-
-interface Product {
-    id: number;
-    name: string;
-    packing: string;
-    price: number;
-    description: string;
-    status: string;
-    quantity: number;
-    weight: string;
-    created_at: Date;
-    updated_at: Date;
-}
+import {Product} from "@/models/Model";
 
 const TableProduct = () => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -35,7 +23,7 @@ const TableProduct = () => {
         getData();
     }, []);
 
-    const columns: string[] = ["ID", "Tên", "Giá", "Khối lượng tịnh", "Quy cách đóng gói", "Số lượng", "Trạng thái", "Thời gian cập nhật", ""];
+    const columns: string[] = ["Mã sản phẩm", "Tên", "Giá", "Khối lượng tịnh", "Quy cách đóng gói", "Số lượng", "Trạng thái", "Thời gian cập nhật", ""];
     return (
         <div
             className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -85,23 +73,24 @@ const TableProduct = () => {
                                 <input type="checkbox"/>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {product.id}
-                                </p>
+                                <h5 className="font-medium text-black dark:text-white">
+                                    {product.sku}
+                                </h5>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <h5 className="font-medium text-black dark:text-white">
                                     {product.name}
                                 </h5>
                             </td>
+
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <h5 className="font-medium text-black dark:text-white">
-                                    {product.price}
+                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
                                 </h5>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <p className="text-black dark:text-white">
-                                    {product.weight}
+                                    {product.weight} g
                                 </p>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
@@ -137,7 +126,7 @@ const TableProduct = () => {
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <div className="flex items-center space-x-3.5">
-                                    <button className="hover:text-primary"><Eye/></button>
+                                    <Link href={`/products/${product.id}`} className="hover:text-primary"><Eye/></Link>
                                     <button className="hover:text-primary"><Trash/></button>
                                     {/*<button className="hover:text-primary"><ArrowDownToLine/></button>*/}
                                 </div>

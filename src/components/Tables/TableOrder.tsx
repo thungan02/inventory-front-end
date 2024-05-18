@@ -6,10 +6,12 @@ import Link from "next/link";
 interface Order {
     id: number;
     customer_id: number;
-    user_id: number;
-    price: string;
-    total_price: string;
-    discount: number;
+    created_by: string;
+    address: string;
+    city: string;
+    ward: string;
+    district: string;
+    total_price: number;
     status: string;
     created_at: Date;
     updated_at: Date;
@@ -49,6 +51,7 @@ const TableOrder = () => {
             default:
                 return "Hủy";
         }
+
     };
 
     const [orders, setOrders] = useState<Order[]>([]);
@@ -69,7 +72,7 @@ const TableOrder = () => {
         getData();
     }, []);
 
-    const columns: string[] = ["ID", "Khách hàng", "Ngày tạo", "Thời gian cập nhật", "Trạng thái", "Ghi chú", ""];
+    const columns: string[] = ["ID", "Khách hàng", "Người tạo", "Tổng tiền", "Địa chỉ", "Trạng thái", "Ngày tạo", ""];
     return (
         <div
             className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -125,15 +128,19 @@ const TableOrder = () => {
                                 </h5>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {new Date(order.created_at).toLocaleString()}
-                                </p>
+                                <h5 className="font-medium text-black dark:text-white">
+                                    {order.created_by}
+                                </h5>
                             </td>
-
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {new Date(order.updated_at).toLocaleString()}
-                                </p>
+                                <h5 className="font-medium text-black dark:text-white">
+                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_price)}
+                                </h5>
+                            </td>
+                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <h5 className="font-medium text-black dark:text-white">
+                                    {order.address} {order.ward} {order.district} {order.city}
+                                </h5>
                             </td>
 
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
@@ -145,11 +152,14 @@ const TableOrder = () => {
                                     }
                                 </p>
                             </td>
-
-
+                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <p className="text-black dark:text-white">
+                                    {new Date(order.created_at).toLocaleString()}
+                                </p>
+                            </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <div className="flex items-center space-x-3.5">
-                                    <button className="hover:text-primary"><Eye/></button>
+                                    <Link href={`/orders/${order.id}`} className="hover:text-primary"><Eye/></Link>
                                     <button className="hover:text-primary"><Trash/></button>
                                     {/*<button className="hover:text-primary"><ArrowDownToLine/></button>*/}
                                 </div>

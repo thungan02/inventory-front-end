@@ -8,13 +8,20 @@ import Image from "next/image";
 import TextArea from "@/components/Inputs/TextArea";
 import Tooltip from "@/components/comon/Tooltip";
 import Alert from "@/components/Alert";
+import {useRouter} from "next/navigation";
+import Link from "next/link";
+import {Material} from "@/models/Model";
 
-const ProductForm = () => {
+interface Props {
+    material?: Material;
+}
+
+const MaterialForm = ({material} : Props) => {
+    const router = useRouter();
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
-
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -51,7 +58,7 @@ const ProductForm = () => {
         setImages(newImages);
     }
 
-    const onSubmitCreateProduct = (event: FormEvent<HTMLFormElement>) => {
+    const onSubmitMaterialForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const name : string = formData.get('name') as string;
@@ -65,6 +72,24 @@ const ProductForm = () => {
             setError('Nhà cung cấp là bắt buộc');
             return;
         }
+
+        const method = (material ? "PUT" : "POST");
+
+        const response = await fetch(`http://localhost:8000/api/v1/materials${material?.id ? "/" + material.id : ''}`,
+            {
+                method: method,
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'content-type': 'application/json'
+                }
+            }
+        );
+
+        if (response.ok) {
+            router.push('/materials');
+        } else {
+            console.log("that bai");
+        }
     }
 
     useEffect(() => {
@@ -76,8 +101,9 @@ const ProductForm = () => {
             return () => clearTimeout(timer);
         }
     }, [error]);
+
     return (
-        <form onSubmit={onSubmitCreateProduct}>
+        <form onSubmit={onSubmitMaterialForm}>
             {
                 error && <Alert message={error} type="error"/>
             }
@@ -90,6 +116,7 @@ const ProductForm = () => {
                 <div className="py-2">
                     <Input label="Tên nguyên vật liệu" feedback="Tên nguyên vật liệu là bắt buộc"
                            placeholder="Nhập tên nguyên vật liệu"
+                           defaultValue={material?.name}
                            type="text" name="name"/>
 
                     <SeachInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp" name="provider"/>
@@ -97,32 +124,35 @@ const ProductForm = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Xuất xứ" feedback="Xuất xứ của nguyên vật liệu"
                                placeholder="Xuất xứ"
-                               type="text" name="quantity"/>
+                               defaultValue={material?.origin}
+                               type="text" name="origin"/>
 
                         <Input label="Số lượng" feedback="Số lượng hiện có là bắt buộc"
                                placeholder="Nhập số lượng sản phẩm"
+                               defaultValue={material?.quantity}
                                type="number" name="quantity" min={0}/>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         <Input label="Khối lượng" feedback="Khối lượng là bắt buộc"
                                placeholder="Nhập khối lượng sản phẩm"
+                               defaultValue={material?.weight}
                                type="number"
                                name="weight" min={0}/>
 
-                        <Select label="Đơn vị" name="packing">
-                            <option value="Thùng" selected={true}>Thùng</option>
+                        <Select label="Đơn vị" name="unit" defaultValue="Thùng">
+                            <option value="Thùng">Thùng</option>
                             <option value="Bao">Bao</option>
                             <option value="Túi">Túi</option>
                         </Select>
 
-                        <Select label="Trạng thái" name="status">
-                            <option value="IN_STOCK" selected={true}>Đang bán</option>
+                        <Select label="Trạng thái" name="status" defaultValue="IN_STOCK">
+                            <option value="IN_STOCK">Đang bán</option>
                             <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
                             <option value="OUT_OF_STOCK">Hết hàng</option>
                         </Select>
                     </div>
                     <div>
-                        <TextArea label="Ghi chú" placeholder="Nhập ghi chú" name="note" feedback=""/>
+                        <TextArea label="Ghi chú" placeholder="Nhập ghi chú" name="note" feedback="" defaultValue={material?.note}/>
                     </div>
                 </div>
 
@@ -190,16 +220,16 @@ const ProductForm = () => {
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
-                <button className="btn btn-danger text-sm inline-flex items-center gap-2">
+                <Link href={"/materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                     <span className="hidden xl:block">Hủy</span>
-                </button>
+                </Link>
 
-                <button className="btn btn-blue text-sm inline-flex items-center gap-2">
-                    <span className="hidden xl:block">Lưu</span>
+                <button type="submit" className="btn btn-blue text-sm inline-flex items-center gap-2">
+                    <span className="hidden xl:block">{material ? "Cập nhật" : "Lưu"}</span>
                 </button>
             </div>
         </form>
     );
 };
 
-export default ProductForm;
+export default MaterialForm;

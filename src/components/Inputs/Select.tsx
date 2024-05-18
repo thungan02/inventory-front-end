@@ -3,10 +3,11 @@ import React, {useId} from 'react';
 interface SelectProps {
     label: string;
     name: string;
-    children: React.ReactNode
+    children: React.ReactNode;
+    defaultValue: string | number;
 }
 
-const Select = ({label, name, children}: SelectProps) => {
+const Select = ({label, name, children, defaultValue}: SelectProps) => {
     const id: string = useId();
     return (
         <div className="w-full mb-6">
@@ -16,7 +17,10 @@ const Select = ({label, name, children}: SelectProps) => {
             <div className="relative">
                 <select
                     className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-2 px-4 mb-3 text-xs rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    id={id}>
+                    id={id}
+                    name={name}
+                    defaultValue={defaultValue}
+                >
                     {children}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">

@@ -1,9 +1,8 @@
 import React, {useRef, useState} from 'react';
 import JoditEditor from "jodit-react";
 
-const Editor = ({placeholder} : {placeholder: string}) => {
+const Editor = ({placeholder, content, setContent} : {placeholder: string, content: string, setContent: React.Dispatch<React.SetStateAction<string>>}) => {
     const editor = useRef(null);
-    const [content, setContent] = useState<string>('');
     const config = {
         readonly: false,
         placeholder: placeholder,

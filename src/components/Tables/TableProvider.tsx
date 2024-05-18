@@ -2,11 +2,14 @@
 import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
 import {useEffect, useState} from "react";
 import Link from "next/link";
-interface Providers {
+interface Provider {
     id: number;
     name: string;
     address: string;
-    phone_number: string;
+    city: string;
+    district: string;
+    ward: string;
+    phone: string;
     email: string;
     note: string;
     status: string;
@@ -14,7 +17,7 @@ interface Providers {
     updated_at: Date;
 }
 const TableProduct = () => {
-    const [providers, setProviders] = useState<Providers[]>([]);
+    const [providers, setProviders] = useState<Provider[]>([]);
     const getData = async () => {
         await fetch("http://localhost:8000/api/v1/providers")
             .then(res => {
@@ -32,7 +35,7 @@ const TableProduct = () => {
         getData();
     }, []);
 
-    const columns : string[] = ["ID", "Tên", "Địa chỉ", "Email", "Ghi chú", "Trạng thái", ""];
+    const columns : string[] = ["ID", "Tên", "Số điện thoại", "Địa chỉ", "Email", "Ghi chú", "Trạng thái", ""];
     return (
         <div
             className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -75,7 +78,7 @@ const TableProduct = () => {
                     </tr>
                     </thead>
                     <tbody className="text-left">
-                    {providers.map((providers: Providers, key: number) => (
+                    {providers.map((providers: Provider, key: number) => (
                         <tr key={key} className="text-xs">
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <p className="text-black dark:text-white">
@@ -86,11 +89,16 @@ const TableProduct = () => {
                                 <h5 className="font-medium text-black dark:text-white">
                                     {providers.name}
                                 </h5>
-                                <p className="text-xs">{providers.phone_number}</p>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <h5 className="font-medium text-black dark:text-white">
+                                    {providers.phone}
+                                </h5>
+                            </td>
+
+                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <p className="text-black dark:text-white">
-                                    {providers.address}
+                                    {providers.address} {providers.ward} {providers.district} {providers.city}
                                 </p>
                             </td>
 
@@ -121,7 +129,7 @@ const TableProduct = () => {
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <div className="flex items-center space-x-3.5">
-                                    <button className="hover:text-primary"><Eye/></button>
+                                    <Link href={`/providers/${providers.id}`} className="hover:text-primary"><Eye/></Link>
                                     <button className="hover:text-primary"><Trash/></button>
                                     {/*<button className="hover:text-primary"><ArrowDownToLine/></button>*/}
                                 </div>

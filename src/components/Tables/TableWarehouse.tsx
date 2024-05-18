@@ -6,7 +6,13 @@ interface Warehouse {
     id: number;
     name: string;
     status: string;
+    city: string;
+    district: string;
+    ward: string;
     address: string;
+    note: string;
+    created_at: Date;
+    updated_at: Date;
 }
 const TableWarehouse = () => {
     const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -27,7 +33,7 @@ const TableWarehouse = () => {
         getData();
     }, []);
 
-    const columns : string[] = ["ID", "Tên", "Địa chỉ", "Trạng thái", ""];
+    const columns : string[] = ["ID", "Tên", "Địa chỉ", "Trạng thái", "Thời gian hoạt động", "Ghi chú", ""];
     return (
         <div
             className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -84,27 +90,38 @@ const TableWarehouse = () => {
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <p className="text-black dark:text-white">
-                                    {warehouses.address}
+                                    {warehouses.address} {warehouses.ward} {warehouses.district} {warehouses.city}
                                 </p>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <p
                                     className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
-                                        warehouses.status === "ACTIVE"
+                                        warehouses.status === "ENABLE"
                                             ? "bg-success text-success"
-                                            : warehouses.status === "TEMPORARILY_SUSPENDED"
+                                            : warehouses.status === "DISABLE"
                                                 ? "bg-danger text-danger"
                                                 : "bg-warning text-warning"
                                     }`}
                                 >
                                     {
-                                        warehouses.status === "ACTIVE" ? "Đang hoạt động" : warehouses.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Không hoạt động"
+                                        warehouses.status === "ENABLE" ? "Đang hoạt động" : warehouses.status === "DISABLE" ? "Không hoạt động" : "Tạm ngưng"
                                     }
                                 </p>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <p className="text-black dark:text-white">
+                                    {new Date(warehouses.created_at).toLocaleString()}
+                                </p>
+                            </td>
+                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <p className="text-black dark:text-white">
+                                    {warehouses.note}
+                                </p>
+                            </td>
+                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <div className="flex items-center space-x-3.5">
-                                    <button className="hover:text-primary"><Eye/></button>
+                                    <Link href={`/warehouses/${warehouses.id}`}
+                                          className="hover:text-primary"><Eye/></Link>
                                     <button className="hover:text-primary"><Trash/></button>
                                     {/*<button className="hover:text-primary"><ArrowDownToLine/></button>*/}
                                 </div>

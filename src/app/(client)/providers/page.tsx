@@ -10,7 +10,7 @@ import {CirclePlus} from "@/components/Icons";
 const ProvidersPage = () => {
     return (
         <DefaultLayout>
-            <Breadcrumb pageName="Danh sách sản phẩm">
+            <Breadcrumb pageName="Danh sách nhà cung cấp">
                 <div className="inline-flex gap-4">
                     <button className="btn btn-blue text-sm inline-flex items-center gap-2">
                         <FolderUp/>
