@@ -5,9 +5,10 @@ interface SelectProps {
     name: string;
     children: React.ReactNode;
     defaultValue: string | number;
+    onChange?: () => avoid;
 }
 
-const Select = ({label, name, children, defaultValue}: SelectProps) => {
+const Select = ({label, name, children, defaultValue, onChange}: SelectProps) => {
     const id: string = useId();
     return (
         <div className="w-full mb-6">
@@ -19,6 +20,7 @@ const Select = ({label, name, children, defaultValue}: SelectProps) => {
                     className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-2 px-4 mb-3 text-xs rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     id={id}
                     name={name}
+                    onChange={onChange}
                     defaultValue={defaultValue}
                 >
                     {children}

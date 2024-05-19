@@ -26,6 +26,8 @@ import ArrowDown from "@/components/Icons/ArrowDown";
 import X from "@/components/Icons/X";
 import CircleHelp from "@/components/Icons/CircleHelp";
 import Info from "@/components/Icons/Info";
+import TriangleAlert from "@/components/Icons/TriangleAlert";
+import Check from "@/components/Icons/Check";
 export {
     Clock,
     Google,
@@ -54,5 +56,7 @@ export {
     ArrowDown,
     X,
     CircleHelp,
-    Info
+    Info,
+    TriangleAlert,
+    Check
 }
