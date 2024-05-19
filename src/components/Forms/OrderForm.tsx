@@ -2,20 +2,67 @@
 import React, {FormEvent, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
-import {ImageUp} from "@/components/Icons";
 import TextArea from "@/components/Inputs/TextArea";
 import Radio from "@/components/Inputs/Radio";
 import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
-import SeachInput from "@/components/Inputs/SeachInput";
 import Link from "next/link";
-import {Order} from "@/models/Model";
+import {Order, Product} from "@/models/Model";
+import InputDefault from "@/components/Inputs/InputDefault";
+import {Trash} from "@/components/Icons";
+import Image from "next/image";
 
 interface Props {
     order?: Order;
 }
 
-const ProductForm = ({order} : Props) => {
+let productsExample: Product[] = [
+    {
+        id: 1,
+        sku: "MK01",
+        name: "Macca",
+        packing: "Hũ thủy tinh",
+        price: 159000,
+        quantity: 15,
+        weight: 10,
+        image: "",
+        description: "Sản phẩm được nhập từ Úc có giấy tờ công bố đầy đủ",
+        status: "IN_STOCK",
+        created_at: "2024-05-15T22:33:25.000000Z",
+        updated_at: "2024-05-17T19:08:29.000000Z"
+    },
+    {
+        id: 2,
+        sku: "MH02",
+        name: "Hạnh nhân",
+        packing: "Túi zip",
+        price: 210000,
+        quantity: 35,
+        weight: 500,
+        image: "",
+        description: "Sản phẩm được nhập từ Úc",
+        status: "IN_STOCK",
+        created_at: "2024-05-15T22:34:52.000000Z",
+        updated_at: "2024-05-15T22:34:52.000000Z"
+    },
+    {
+        id: 3,
+        sku: "MH03",
+        name: "Óc chó vàng",
+        packing: "Hủ nhựa",
+        price: 255000,
+        quantity: 6,
+        weight: 400,
+        image: "",
+        description: "Sản phẩm được nhập từ Úc",
+        status: "IN_STOCK",
+        created_at: "2024-05-15T22:36:21.000000Z",
+        updated_at: "2024-05-15T22:36:21.000000Z"
+    },
+];
+
+const ProductForm = ({order}: Props) => {
+    const columns: string[] = ["Sản phẩm", "","Số lượng", "Giá (đ)", "Thành tiền (đ)", ""];
     const router = useRouter();
     const inputProductImage = useRef<HTMLInputElement>(null);
     const openInputImage = () => {
@@ -26,9 +73,9 @@ const ProductForm = ({order} : Props) => {
     const onSubmitCreateOrder = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const name : string = formData.get('name') as string;
-        const phone : string = formData.get('phone') as string;
-        const address : string = formData.get('address') as string;
+        const name: string = formData.get('name') as string;
+        const phone: string = formData.get('phone') as string;
+        const address: string = formData.get('address') as string;
 
 
         if (name.trim() === '') {
@@ -73,7 +120,7 @@ const ProductForm = ({order} : Props) => {
     }, [error]);
 
     return (
-        <form onSubmit={onSubmitCreateOrder}>
+        <form onSubmit={onSubmitCreateOrder} className="flex flex-col gap-5">
             {
                 error && <Alert message={error} type="error"/>
             }
@@ -131,8 +178,81 @@ const ProductForm = ({order} : Props) => {
                 </div>
             </div>
 
+
             <div
-                className="rounded-sm border border-stroke bg-white mt-5 px-5 pb-5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+                className="rounded-sm border border-stroke bg-white px-5 pb-2.5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+                <div className="border-b border-opacity-30">
+                    <span className="text-sm text-black-2 font-bold mb-3 block">Sản phẩm</span>
+                </div>
+                <div className="flex flex-col gap-2 py-3">
+                    <div className="flex flex-row justify-between gap-2 items-center">
+                        <InputDefault placeholder="Nhập SKU hoặc tên sản phẩm" type="text" name=""/>
+                        <button className="appearance-none rounded px-4 py-1 btn-blue">Tìm</button>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <table className="w-full table-auto">
+                            <thead>
+                            <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                                {
+                                    columns.map((column: string, index: number) => (
+                                        <th key={"columns-" + index}
+                                            className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
+                                            {column}
+                                        </th>
+                                    ))
+                                }
+                            </tr>
+                            </thead>
+                            <tbody className="text-left">
+                            {productsExample.map((product: Product, key: number) => (
+                                <tr key={key} className="text-xs border-b border-[#eee]">
+                                    <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
+                                        <div className="flex flex-row gap-2">
+                                            <div>
+                                                <Image src={"/images/default/no-image.png"} alt="" width={50} height={50} className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                            </div>
+                                            <div>
+                                                <a href={`/products/${product.id}`} target="_blank"  className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
+                                                <div>SKU: {product.sku}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-2 py-3 dark:border-strokedark">
+                                        <input defaultValue={1} min={0} type="number" className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                    </td>
+                                    <td className="px-2 py-3 dark:border-strokedark">
+                                        <h5 className="font-medium text-black dark:text-white">
+                                            {new Intl.NumberFormat('vi-VN', {
+                                                style: 'currency',
+                                                currency: 'VND'
+                                            }).format(product.price)}
+                                        </h5>
+                                    </td>
+                                    <td className="px-2 py-3 dark:border-strokedark">
+                                        <h5 className="font-medium text-black dark:text-white">
+                                            {new Intl.NumberFormat('vi-VN', {
+                                                style: 'currency',
+                                                currency: 'VND'
+                                            }).format(product.price)}
+                                        </h5>
+                                    </td>
+
+                                    <td className="px-2 py-3 dark:border-strokedark">
+                                        <div className="flex items-center space-x-3.5">
+                                            <button className="hover:text-primary" type="button"
+                                                    onClick={() => handleClickDeleteProduct(product)}><Trash/></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                className="rounded-sm border border-stroke bg-white px-5 pb-5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="border-b border-opacity-30">
                     <span className="text-sm text-black-2 font-bold mb-3 block">Thanh toán</span>
                 </div>
@@ -153,7 +273,8 @@ const ProductForm = ({order} : Props) => {
                                 <Radio label="Momo" name="payment"/>
                             </div>
                             <div className="col-span-2">
-                                <TextArea label="Ghi chú" placeholder="Nhập ghi chú cho đơn hàng" name="note" feedback=""/>
+                                <TextArea label="Ghi chú" placeholder="Nhập ghi chú cho đơn hàng" name="note"
+                                          feedback=""/>
                             </div>
                         </div>
                         <div>

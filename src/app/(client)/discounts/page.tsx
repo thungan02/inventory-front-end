@@ -1,12 +1,12 @@
 import React from 'react';
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import {TableDiscount, TableOrder, TableProduct} from "@/components/Tables";
+import {TableDiscount} from "@/components/Tables";
 import FolderUp from "@/components/Icons/FolderUp";
 import Link from "next/link";
 import {CirclePlus} from "@/components/Icons";
 
-const   OrderPage = () => {
+const OrderPage = () => {
     return (
         <DefaultLayout>
             <Breadcrumb pageName="Danh sách khuyến mãi">

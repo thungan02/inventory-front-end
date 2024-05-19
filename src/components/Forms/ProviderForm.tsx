@@ -7,15 +7,61 @@ import Alert from "@/components/Alert";
 import Link from "next/link";
 import {Provider} from "@/models/Model";
 import {useRouter} from "next/navigation";
+import {getData} from "@/services/APIService";
+import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
+import {API_GET_ALL_DISTRICTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
+
 interface Props {
     provider?: Provider;
 }
 
 
-const ProviderForm = ({provider}:Props) => {
+const ProviderForm = ({provider}: Props) => {
     const router = useRouter();
     const inputProductImage = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string | null>(null);
+    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [districts, setDistricts] = useState<District[]>([]);
+    const [wards, setWards] = useState<Ward[]>([]);
+    const [selectedProvinceName, setSelectedProvinceName] = useState<string>('');
+    const [selectedDistrictName, setSelectedDistrictName] = useState<string>('');
+    const [selectedWardName, setSelectedWardName] = useState<string>('');
+
+    const handleChangeProvince = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedId = event.target.value;
+        const selectedName = provinces.find(province => province.province_id === selectedId)?.province_name || '';
+        setSelectedProvinceName(selectedName);
+
+        if (selectedId) {
+            try {
+                const districtsResult : DistrictResponse = await getData(API_GET_ALL_DISTRICTS + '/' + selectedId);
+                setDistricts(districtsResult.results);
+                setWards([])
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            setDistricts([]);
+            setWards([])
+        }
+    }
+
+    const handleChangeDistrict = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedId = event.target.value;
+        const selectedName = districts.find(district => district.district_id === selectedId)?.district_name || '';
+        setSelectedDistrictName(selectedName);
+
+        if (selectedId) {
+            try {
+                const wardsResult : WardResponse = await getData(API_GET_ALL_WARDS + '/' + selectedId);
+                setWards(wardsResult.results);
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            setWards([])
+        }
+    }
 
     const openInputImage = () => {
         inputProductImage.current?.click();
@@ -23,10 +69,10 @@ const ProviderForm = ({provider}:Props) => {
     const onSubmitCreateProduct = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const name : string = formData.get('name') as string;
-        const phone : string = formData.get('phone') as string;
-        const address : string = formData.get('address') as string;
-        const email : string = formData.get('email') as string;
+        const name: string = formData.get('name') as string;
+        const phone: string = formData.get('phone') as string;
+        const address: string = formData.get('address') as string;
+        const email: string = formData.get('email') as string;
 
         if (name.trim() === '') {
             setError('Mã giảm giá là bắt buộc');
@@ -74,6 +120,16 @@ const ProviderForm = ({provider}:Props) => {
             return () => clearTimeout(timer);
         }
     }, [error]);
+
+    useEffect(() => {
+        const getAllProvinces = async () => {
+            const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
+            setProvinces(result.results);
+            console.log(result.results);
+        }
+
+        getAllProvinces();
+    }, []);
     return (
         <form onSubmit={onSubmitCreateProduct}>
             {
@@ -108,22 +164,30 @@ const ProviderForm = ({provider}:Props) => {
                            type="text" name="address"/>
 
                     <div className="grid grid-cols-3 gap-3">
-                        <Select label="Thành phố/Tỉnh" name="city" defaultValue="TP Hồ Chí Minh">
-                            <option value="TP Hồ Chí Minh">TP Hồ Chí Minh</option>
-                            <option value="Hà Nội">Hà Nội</option>
-                            <option value="Bến Tre">Bến Tre</option>
+                        <Select label="Thành phố/Tỉnh" name="city" defaultValue="" onChange={handleChangeProvince}>
+                            {
+                                provinces.map((province: Province) => (
+                                    <option key={province.province_id} value={province.province_id}>{province.province_name}</option>
+                                ))
+                            }
                         </Select>
 
-                        <Select label="Quận/Huyện" name="district" defaultValue="Gò Vấp">
-                            <option value="Gò Vấp">Gò Vấp</option>
-                            <option value="Tân Bình">Tân Bình</option>
-                            <option value="Tân Phú">Tân Phú</option>
+                        <Select label="Quận/Huyện" name="district" defaultValue="" onChange={handleChangeDistrict}>
+                            <option>Chọn quận/huyện</option>
+                            {
+                                districts.map((district: District) => (
+                                    <option key={district.district_id} value={district.district_id}>{district.district_name}</option>
+                                ))
+                            }
                         </Select>
 
                         <Select label="Phường/xã" name="ward" defaultValue="Phường 1">
-                            <option value="Phường 1">Phường 1</option>
-                            <option value="Phường 2">Phường 2</option>
-                            <option value="Phường 3">Phường 3</option>
+                            <option>Chọn xã/phường</option>
+                            {
+                                wards.map((ward: Ward) => (
+                                    <option key={ward.ward_id} value={ward.ward_id}>{ward.ward_name}</option>
+                                ))
+                            }
                         </Select>
                     </div>
 
@@ -135,7 +199,8 @@ const ProviderForm = ({provider}:Props) => {
 
 
                     <div>
-                        <TextArea label="Ghi chú" placeholder="Nhập ghi chú" name="note" feedback="" defaultValue={provider?.note}/>
+                        <TextArea label="Ghi chú" placeholder="Nhập ghi chú" name="note" feedback=""
+                                  defaultValue={provider?.note}/>
                     </div>
                 </div>
             </div>
