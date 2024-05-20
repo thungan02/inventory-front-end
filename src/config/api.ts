@@ -8,4 +8,5 @@ export const API_DELETE_CUSTOMER = API_BASE_URL + '/api/v1/customers'
 export const API_DELETE_MATERIAL = API_BASE_URL + '/api/v1/materials'
 export const API_DELETE_PROVIDER = API_BASE_URL + '/api/v1/providers'
 export const API_DELETE_DISCOUNT = API_BASE_URL + '/api/v1/discounts'
-
+export const API_DELETE_ORDER = API_BASE_URL + '/api/v1/orders'
+export const API_DELETE_WAREHOUSE = API_BASE_URL + '/api/v1/warehouses'

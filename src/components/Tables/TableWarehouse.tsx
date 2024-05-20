@@ -1,21 +1,36 @@
 "use client"
 import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import {useEffect, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-interface Warehouse {
-    id: number;
-    name: string;
-    status: string;
-    city: string;
-    district: string;
-    ward: string;
-    address: string;
-    note: string;
-    created_at: Date;
-    updated_at: Date;
-}
+import {Warehouse} from "@/models/Model";
+import DeleteModal from "@/components/Modal/DeleteModal";
+import {deleteData} from "@/services/APIService";
+import {API_DELETE_WAREHOUSE} from "@/config/api";
+import SuccessModal from "@/components/Modal/SuccessModal";
+import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
+
 const TableWarehouse = () => {
     const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+    const [warehouseToDeleted, setWarehouseToDeleted] = useState<Warehouse | null>(null);
+    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
+    const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
+
+    const handleClickDeleteWarehouse = (warehouse: Warehouse) => {
+        setWarehouseToDeleted(warehouse);
+        setIsOpenDeleteModal(true);
+    }
+
+    const handleDelete = async () => {
+        await deleteData (API_DELETE_WAREHOUSE + '/' + warehouseToDeleted?.id)
+        setIsOpenDeleteModal(false);
+        setIsOpenSuccessModal(true);
+        getData();
+    }
+
+    const handleCloseDeleteModal = () => {
+        setIsOpenDeleteModal(false);
+        setWarehouseToDeleted(null);
+    }
     const getData = async () => {
         await fetch("http://localhost:8000/api/v1/warehouses")
             .then(res => {
@@ -35,123 +50,131 @@ const TableWarehouse = () => {
 
     const columns : string[] = ["ID", "Tên", "Địa chỉ", "Trạng thái", "Thời gian hoạt động", "Ghi chú", ""];
     return (
-        <div
-            className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-            <div className="flex gap-3">
-                <div className="w-90 mb-4">
-                    <div className="relative border rounded py-1 px-3">
-                        <button className="absolute left-2.5 top-1/2 -translate-y-1/2">
-                            <Seach/>
-                        </button>
+        <Fragment>
+            {
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+            }
+            {
+                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${warehouseToDeleted?.id} - ${warehouseToDeleted?.name} - ${warehouseToDeleted?.address}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+            }
+            <div
+                className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+                <div className="flex gap-3">
+                    <div className="w-90 mb-4">
+                        <div className="relative border rounded py-1 px-3">
+                            <button className="absolute left-2.5 top-1/2 -translate-y-1/2">
+                                <Seach/>
+                            </button>
 
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm"
-                            className="w-full bg-transparent pl-9 pr-4 font-medium focus:outline-none text-xs"
-                        />
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm"
+                                className="w-full bg-transparent pl-9 pr-4 font-medium focus:outline-none text-xs"
+                            />
+                        </div>
+                    </div>
+                    <div className="w-40">
+                        <select
+                            className="rounded w-full bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
+                            <option selected value={10}>Thêm bộ lọc</option>
+                            <option value={20}>Lọc theo tên</option>
+                            <option value={20}>Lọc theo số điện thoại</option>
+                        </select>
                     </div>
                 </div>
-                <div className="w-40">
-                    <select
-                        className="rounded w-full bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                        <option selected value={10}>Thêm bộ lọc</option>
-                        <option value={20}>Lọc theo tên</option>
-                        <option value={20}>Lọc theo số điện thoại</option>
-                    </select>
-                </div>
-            </div>
-            <div className="max-w-full overflow-x-auto">
-                <table className="w-full table-auto">
-                    <thead>
-                    <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                <div className="max-w-full overflow-x-auto">
+                    <table className="w-full table-auto">
+                        <thead>
+                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
 
-                        {
-                            columns.map((column: string, index: number) => (
-                                <th key={"columns-" + index}
-                                    className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
-                                    {column}
-                                </th>
-                            ))
-                        }
-                    </tr>
-                    </thead>
-                    <tbody className="text-left">
-                    {warehouses.map((warehouses: Warehouse, key: number) => (
-                        <tr key={key} className="text-xs">
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {warehouses.id}
-                                </p>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {warehouses.name}
-                                </p>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {warehouses.address}, {warehouses.ward}, {warehouses.district}, {warehouses.city}
-                                </p>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p
-                                    className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
-                                        warehouses.status === "ENABLE"
-                                            ? "bg-success text-success"
-                                            : warehouses.status === "DISABLE"
-                                                ? "bg-danger text-danger"
-                                                : "bg-warning text-warning"
-                                    }`}
-                                >
-                                    {
-                                        warehouses.status === "ENABLE" ? "Đang hoạt động" : warehouses.status === "DISABLE" ? "Không hoạt động" : "Tạm ngưng"
-                                    }
-                                </p>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {new Date(warehouses.created_at).toLocaleString()}
-                                </p>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <p className="text-black dark:text-white">
-                                    {warehouses.note}
-                                </p>
-                            </td>
-                            <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                <div className="flex items-center space-x-3.5">
-                                    <Link href={`/warehouses/${warehouses.id}`}
-                                          className="hover:text-primary"><Eye/></Link>
-                                    <button className="hover:text-primary"><Trash/></button>
-                                    {/*<button className="hover:text-primary"><ArrowDownToLine/></button>*/}
-                                </div>
-                            </td>
+                            {
+                                columns.map((column: string, index: number) => (
+                                    <th key={"columns-" + index}
+                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
+                                        {column}
+                                    </th>
+                                ))
+                            }
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className="flex flex-row justify-between mt-4 mb-3">
-                <div>
-                    <select
-                        className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                        <option selected value={10}>Hiển thị 10</option>
-                        <option value={20}>Hiển thị 20</option>
-                        <option value={50}>Hiển thị 50</option>
-                    </select>
+                        </thead>
+                        <tbody className="text-left">
+                        {warehouses.map((warehouses: Warehouse, key: number) => (
+                            <tr key={key} className="text-xs">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <p className="text-black dark:text-white">
+                                        {warehouses.id}
+                                    </p>
+                                </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <p className="text-black dark:text-white">
+                                        {warehouses.name}
+                                    </p>
+                                </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <p className="text-black dark:text-white">
+                                        {warehouses.address}, {warehouses.ward}, {warehouses.district}, {warehouses.city}
+                                    </p>
+                                </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <p
+                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
+                                            warehouses.status === "ENABLE"
+                                                ? "bg-success text-success"
+                                                : warehouses.status === "DISABLE"
+                                                    ? "bg-danger text-danger"
+                                                    : "bg-warning text-warning"
+                                        }`}
+                                    >
+                                        {
+                                            warehouses.status === "ENABLE" ? "Đang hoạt động" : warehouses.status === "DISABLE" ? "Không hoạt động" : "Tạm ngưng"
+                                        }
+                                    </p>
+                                </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <p className="text-black dark:text-white">
+                                        {new Date(warehouses.created_at).toLocaleString()}
+                                    </p>
+                                </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <p className="text-black dark:text-white">
+                                        {warehouses.note}
+                                    </p>
+                                </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <div className="flex items-center space-x-3.5">
+                                        <Link href={`/warehouses/${warehouses.id}`}
+                                              className="hover:text-primary"><Eye/></Link>
+                                        <button className="hover:text-primary" type="button"
+                                                onClick={() => handleClickDeleteWarehouse(warehouses)}><Trash/></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-row justify-between mt-4 mb-3">
                     <div>
-                        <span className="text-xs">Tổng 100</span>
+                        <select
+                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
+                            <option selected value={10}>Hiển thị 10</option>
+                            <option value={20}>Hiển thị 20</option>
+                            <option value={50}>Hiển thị 50</option>
+                        </select>
                     </div>
-                    <ul>
-                        <li className="border-[1px] border-gray-500 rounded">
-                            <Link href="/" className="px-3 py-2">1</Link>
-                        </li>
-                    </ul>
+                    <div className="flex gap-2">
+                        <div>
+                            <span className="text-xs">Tổng 100</span>
+                        </div>
+                        <ul>
+                            <li className="border-[1px] border-gray-500 rounded">
+                                <Link href="/" className="px-3 py-2">1</Link>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Fragment>
     );
 };
 

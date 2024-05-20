@@ -1,11 +1,12 @@
 "use client"
 import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import {Fragment, useEffect, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
 import {Product} from "@/models/Model";
 import {deleteData} from "@/services/APIService";
 import {API_DELETE_MATERIAL} from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
+import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 interface Material {
     id: number;
     name: string;
@@ -20,7 +21,7 @@ interface Material {
 }
 const TableMaterials = () => {
     const [materials, setMaterials] = useState<Material[]>([]);
-    const [material, setMaterial] = useState<Material>();
+    const [material, setMaterial] = useState<Material | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
@@ -33,6 +34,12 @@ const TableMaterials = () => {
         await deleteData (API_DELETE_MATERIAL + '/' + material?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
+        getData();
+    }
+
+    const handleCloseDeleteModal = () => {
+        setIsOpenDeleteModal(false);
+        setMaterial(null);
     }
     const getData = async () => {
         await fetch("http://localhost:8000/api/v1/materials")
@@ -55,7 +62,10 @@ const TableMaterials = () => {
     return (
         <Fragment>
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nguyên vật liệu`} message={`Bạn chắc chắn muốn xóa nguyên vật liệu ${material?.id} - ${material?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={() => setIsOpenDeleteModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nguyên vật liệu thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+            }
+            {
+                isOpenDeleteModal && <DeleteModal title={`Xóa nguyên vật liệu`} message={`Bạn chắc chắn muốn xóa nguyên vật liệu ${material?.id} - ${material?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">

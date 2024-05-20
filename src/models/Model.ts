@@ -15,7 +15,6 @@ export interface Product {
 
 export interface Order {
     id: number;
-    customer_id: number;
     created_by: string;
     address: string;
     phone: string;
@@ -25,6 +24,7 @@ export interface Order {
     ward: string;
     district: string;
     total_price: number;
+    customer: Customer;
     status: string;
     created_at: Date;
     updated_at: Date;

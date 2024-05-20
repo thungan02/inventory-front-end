@@ -1,10 +1,11 @@
 "use client"
 import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import {Fragment, useEffect, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
 import {API_DELETE_PROVIDER} from "@/config/api";
 import {deleteData} from "@/services/APIService";
 import DeleteModal from "@/components/Modal/DeleteModal";
+import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 
 interface Provider {
     id: number;
@@ -22,7 +23,7 @@ interface Provider {
 }
 const TableProvider = () => {
     const [providers, setProviders] = useState<Provider[]>([]);
-    const [provider, setProvider] = useState<Provider>();
+    const [provider, setProvider] = useState<Provider | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
@@ -35,6 +36,11 @@ const TableProvider = () => {
         await deleteData (API_DELETE_PROVIDER + '/' + provider?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
+        getData();
+    }
+    const handleCloseDeleteModal = () => {
+        setIsOpenDeleteModal(false);
+        setProvider(null);
     }
 
     const getData = async () => {
@@ -58,7 +64,10 @@ const TableProvider = () => {
     return (
         <Fragment>
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nhà cung cấp`} message={`Bạn chắc chắn muốn xóa nhà cung cấp ${provider?.id} - ${provider?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={() => setIsOpenDeleteModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+            }
+            {
+                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${provider?.id} - ${provider?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
