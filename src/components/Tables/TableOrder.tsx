@@ -139,7 +139,7 @@ const TableOrder = () => {
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <h5 className="font-medium text-black dark:text-white">
-                                    {order.address} {order.ward} {order.district} {order.city}
+                                    {order.address}, {order.ward}, {order.district}, {order.city}
                                 </h5>
                             </td>
 

@@ -5,7 +5,7 @@ interface SelectProps {
     name: string;
     children: React.ReactNode;
     defaultValue: string | number;
-    onChange?: () => avoid;
+    onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => Promise<void>;
 }
 
 const Select = ({label, name, children, defaultValue, onChange}: SelectProps) => {

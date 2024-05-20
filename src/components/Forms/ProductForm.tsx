@@ -7,7 +7,7 @@ import Tooltip from "@/components/comon/Tooltip";
 import Image from "next/image";
 import Editor from "@/components/Inputs/Editor";
 import Alert from "@/components/Alert";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import Link from "next/link";
 import {Product} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
@@ -17,6 +17,7 @@ interface Props {
 }
 const ProductForm = ({product} : Props) => {
     const router = useRouter();
+    const pathname = usePathname();
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -117,7 +118,11 @@ const ProductForm = ({product} : Props) => {
     return (
         <Fragment>
             {
-                insertSuccess && <SuccessModal title="Thành công" message="Thêm sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                insertSuccess && (
+                    pathname.toString().includes('new') ?
+                        <SuccessModal title="Thành công" message="Thêm sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/> :
+                        <SuccessModal title="Thành công" message="Cập nhật sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                )
             }
             <form onSubmit={onSubmitProductForm}>
                 {

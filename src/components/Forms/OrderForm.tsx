@@ -11,6 +11,9 @@ import {Order, Product} from "@/models/Model";
 import InputDefault from "@/components/Inputs/InputDefault";
 import {Trash} from "@/components/Icons";
 import Image from "next/image";
+import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
+import {getData} from "@/services/APIService";
+import {API_GET_ALL_DISTRICTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
 
 interface Props {
     order?: Order;
@@ -25,11 +28,10 @@ let productsExample: Product[] = [
         price: 159000,
         quantity: 15,
         weight: 10,
-        image: "",
         description: "Sản phẩm được nhập từ Úc có giấy tờ công bố đầy đủ",
         status: "IN_STOCK",
-        created_at: "2024-05-15T22:33:25.000000Z",
-        updated_at: "2024-05-17T19:08:29.000000Z"
+        created_at: new Date("2024-05-15T22:33:25.000000Z"),
+        updated_at: new Date("2024-05-15T22:33:25.000000Z")
     },
     {
         id: 2,
@@ -39,11 +41,10 @@ let productsExample: Product[] = [
         price: 210000,
         quantity: 35,
         weight: 500,
-        image: "",
         description: "Sản phẩm được nhập từ Úc",
         status: "IN_STOCK",
-        created_at: "2024-05-15T22:34:52.000000Z",
-        updated_at: "2024-05-15T22:34:52.000000Z"
+        created_at: new Date("2024-05-15T22:33:25.000000Z"),
+        updated_at: new Date("2024-05-15T22:33:25.000000Z")
     },
     {
         id: 3,
@@ -53,18 +54,58 @@ let productsExample: Product[] = [
         price: 255000,
         quantity: 6,
         weight: 400,
-        image: "",
         description: "Sản phẩm được nhập từ Úc",
         status: "IN_STOCK",
-        created_at: "2024-05-15T22:36:21.000000Z",
-        updated_at: "2024-05-15T22:36:21.000000Z"
+        created_at: new Date("2024-05-15T22:33:25.000000Z"),
+        updated_at: new Date("2024-05-15T22:33:25.000000Z")
     },
 ];
 
 const ProductForm = ({order}: Props) => {
-    const columns: string[] = ["Sản phẩm", "","Số lượng", "Giá (đ)", "Thành tiền (đ)", ""];
+    const columns: string[] = ["Sản phẩm", "", "Quy cách đóng gói" ,"Số lượng", "Giá (đ)", "Thành tiền (đ)", ""];
     const router = useRouter();
     const inputProductImage = useRef<HTMLInputElement>(null);
+    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [districts, setDistricts] = useState<District[]>([]);
+    const [wards, setWards] = useState<Ward[]>([]);
+    const [selectedProvinceName, setSelectedProvinceName] = useState<string>('');
+    const [selectedDistrictName, setSelectedDistrictName] = useState<string>('');
+    const [selectedWardName, setSelectedWardName] = useState<string>('');
+    const handleChangeProvince = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedId = event.target.value;
+        const selectedName = provinces.find(province => province.province_id === selectedId)?.province_name || '';
+        setSelectedProvinceName(selectedName);
+
+        if (selectedId) {
+            try {
+                const districtsResult : DistrictResponse = await getData(API_GET_ALL_DISTRICTS + '/' + selectedId);
+                setDistricts(districtsResult.results);
+                setWards([])
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            setDistricts([]);
+            setWards([])
+        }
+    }
+
+    const handleChangeDistrict = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedId = event.target.value;
+        const selectedName = districts.find(district => district.district_id === selectedId)?.district_name || '';
+        setSelectedDistrictName(selectedName);
+
+        if (selectedId) {
+            try {
+                const wardsResult : WardResponse = await getData(API_GET_ALL_WARDS + '/' + selectedId);
+                setWards(wardsResult.results);
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            setWards([])
+        }
+    }
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -119,6 +160,16 @@ const ProductForm = ({order}: Props) => {
         }
     }, [error]);
 
+    useEffect(() => {
+        const getAllProvinces = async () => {
+            const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
+            setProvinces(result.results);
+            console.log(result.results);
+        }
+
+        getAllProvinces();
+    }, []);
+
     return (
         <form onSubmit={onSubmitCreateOrder} className="flex flex-col gap-5">
             {
@@ -138,7 +189,7 @@ const ProductForm = ({order}: Props) => {
 
                     <div className="grid grid-cols-2 gap-3">
                         <Input label="Địa chỉ" feedback="Địa chỉ là bắt buộc"
-                               placeholder="Nhập địa chỉ"
+                               placeholder="Nhập địa chỉ cụ thể"
                                defaultValue={order?.address}
                                type="text"
                                name="address"/>
@@ -149,31 +200,42 @@ const ProductForm = ({order}: Props) => {
                                defaultValue={order?.phone}
                                name="phone"/>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <Select label="Tên sản phẩm" name="name" defaultValue="Macca">
-                            <option value="Macca" selected={true}>Macca</option>
-                            <option value="Nho khô">Nho khô</option>
-                            <option value="Táo đỏ">Táo đỏ</option>
+                    <div className="grid grid-cols-3 gap-3">
+                        <Select label="Thành phố/Tỉnh" name="city" defaultValue="" onChange={handleChangeProvince}>
+                            <option>Chọn thành phố/tỉnh</option>
+                            {
+                                provinces.map((province: Province) => (
+                                    <option key={province.province_id}
+                                            value={province.province_id}>{province.province_name}</option>
+                                ))
+                            }
                         </Select>
 
-                        <Input label="Quy cách đóng gói" feedback="Quy cách đóng gói là bắt buộc"
-                               placeholder="Nhập quy cách đóng gói"
-                               defaultValue={order?.packing}
-                               type="text"
-                               name="address"/>
+                        <Select label="Quận/Huyện" name="district" defaultValue="" onChange={handleChangeDistrict}>
+                            <option>Chọn quận/huyện</option>
+                            {
+                                districts.map((district: District) => (
+                                    <option key={district.district_id} value={district.district_id}>{district.district_name}</option>
+                                ))
+                            }
+                        </Select>
+
+                        <Select label="Phường/xã" name="ward" defaultValue="Phường 1">
+                            <option>Chọn xã/phường</option>
+                            {
+                                wards.map((ward: Ward) => (
+                                    <option key={ward.ward_id} value={ward.ward_id}>{ward.ward_name}</option>
+                                ))
+                            }
+                        </Select>
 
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <Input label="Số lượng" feedback="Số lượng là bắt buộc"
-                               placeholder="Nhập số lượng sản phẩm"
-                               value=""
-                               type="number" name="order_product_quantity" min={0}/>
-                        <Select label="Khuyến mãi" name="status" defaultValue="true">
-                            <option value="IN_STOCK" selected={true}>Đang bán</option>
-                            <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
-                            <option value="OUT_OF_STOCK">Hết hàng</option>
-                        </Select>
-                    </div>
+
+                    <Select label="Khuyến mãi" name="status" defaultValue="true">
+                        <option value="IN_STOCK" selected={true}>Đang bán</option>
+                        <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
+                        <option value="OUT_OF_STOCK">Hết hàng</option>
+                    </Select>
 
                 </div>
             </div>
@@ -209,17 +271,25 @@ const ProductForm = ({order}: Props) => {
                                     <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
                                         <div className="flex flex-row gap-2">
                                             <div>
-                                                <Image src={"/images/default/no-image.png"} alt="" width={50} height={50} className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                                <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                                       height={50}
+                                                       className="rounded border border-opacity-30 aspect-square object-cover"/>
                                             </div>
                                             <div>
-                                                <a href={`/products/${product.id}`} target="_blank"  className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
+                                                <a href={`/products/${product.id}`} target="_blank"
+                                                   className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
                                                 <div>SKU: {product.sku}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-2 py-3 dark:border-strokedark">
-                                        <input defaultValue={1} min={0} type="number" className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                        {product.packing}
                                     </td>
+                                    <td className="px-2 py-3 dark:border-strokedark">
+                                        <input defaultValue={1} min={0} type="number"
+                                               className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                    </td>
+
                                     <td className="px-2 py-3 dark:border-strokedark">
                                         <h5 className="font-medium text-black dark:text-white">
                                             {new Intl.NumberFormat('vi-VN', {
@@ -239,8 +309,7 @@ const ProductForm = ({order}: Props) => {
 
                                     <td className="px-2 py-3 dark:border-strokedark">
                                         <div className="flex items-center space-x-3.5">
-                                            <button className="hover:text-primary" type="button"
-                                                    onClick={() => handleClickDeleteProduct(product)}><Trash/></button>
+                                            <button className="hover:text-primary" type="button"><Trash/></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -262,15 +331,15 @@ const ProductForm = ({order}: Props) => {
                             <div>
                                 <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Hình thức nhận hàng
                                 </div>
-                                <Radio label="Trực tiếp tại cửa hàng" name="shipping"/>
-                                <Radio label="Giao hàng" name="shipping"/>
+                                <Radio label="Trực tiếp tại cửa hàng" name="shipping" value="Trực tiếp tại cửa hàng"/>
+                                <Radio label="Giao hàng" name="shipping" value="Giao hàng"/>
                             </div>
                             <div>
                                 <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Hình thức thanh toán
                                 </div>
-                                <Radio label="Tiền mặt" name="payment"/>
-                                <Radio label="Chuyển khoản" name="payment"/>
-                                <Radio label="Momo" name="payment"/>
+                                <Radio label="Tiền mặt" name="payment" value="Tiền mặt"/>
+                                <Radio label="Chuyển khoản" name="payment" value="Chuyển khoản"/>
+                                <Radio label="Momo" name="payment" value="Momo"/>
                             </div>
                             <div className="col-span-2">
                                 <TextArea label="Ghi chú" placeholder="Nhập ghi chú cho đơn hàng" name="note"

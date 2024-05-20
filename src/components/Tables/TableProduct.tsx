@@ -1,18 +1,37 @@
 "use client"
 import {Eye, Seach, Trash} from "@/components/Icons";
-import {Fragment, useEffect, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
 import {Product} from "@/models/Model";
 import DeleteModal from "@/components/Modal/DeleteModal";
+import {deleteData} from "@/services/APIService";
+import {API_DELETE_PRODUCT} from "@/config/api";
+import SuccessModal from "@/components/Modal/SuccessModal";
+import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
+
+
 
 const TableProduct = () => {
     const [products, setProducts] = useState<Product[]>([]);
-    const [product, setProduct] = useState<Product>(null);
+    const [productToDeleted, setProductToDeleted] = useState<Product | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
+    const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const handleClickDeleteProduct = (product: Product) => {
-        setProduct(product);
+        setProductToDeleted(product);
         setIsOpenDeleteModal(true);
+    }
+
+    const handleDelete = async () => {
+        await deleteData (API_DELETE_PRODUCT + '/' + productToDeleted?.id)
+        setIsOpenDeleteModal(false);
+        setIsOpenSuccessModal(true);
+        getData();
+    }
+
+    const handleCloseDeleteModal = () => {
+        setIsOpenDeleteModal(false);
+        setProductToDeleted(null);
     }
 
     const getData = async () => {
@@ -36,7 +55,10 @@ const TableProduct = () => {
     return (
         <Fragment>
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${product.sku} - ${product.name}. Hành động này sẽ không thể hoàn tác`}  onClose={() => setIsOpenDeleteModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+            }
+            {
+                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${productToDeleted?.sku} - ${productToDeleted?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">

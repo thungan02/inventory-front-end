@@ -8,7 +8,7 @@ export interface Product {
     description: string;
     status: string;
     quantity: number;
-    weight: string;
+    weight: number;
     created_at: Date;
     updated_at: Date;
 }
@@ -100,6 +100,7 @@ export interface Discount {
     maximum_discount_value: number;
     discount_value: number;
     discount_unit: string;
+    status: string;
     valid_until: Date;
     valid_start: Date;
 }

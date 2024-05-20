@@ -20,6 +20,23 @@ const getData = async (endpoint: string): Promise<any> => {
         throw error;
     }
 }
+const deleteData = async (endpoint: string)=> {
+    try {
+        const response = await fetch(`${endpoint}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    } catch (error) {
+        handleError(error);
+        throw error;
+    }
+}
 
 
-export {getData};
+export {getData, deleteData};

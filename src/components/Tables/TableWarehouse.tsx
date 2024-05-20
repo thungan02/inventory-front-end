@@ -90,7 +90,7 @@ const TableWarehouse = () => {
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
                                 <p className="text-black dark:text-white">
-                                    {warehouses.address} {warehouses.ward} {warehouses.district} {warehouses.city}
+                                    {warehouses.address}, {warehouses.ward}, {warehouses.district}, {warehouses.city}
                                 </p>
                             </td>
                             <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
