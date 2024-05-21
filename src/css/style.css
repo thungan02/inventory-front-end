@@ -253,6 +253,13 @@ input[type="search"]::-webkit-search-cancel-button {
     @apply bg-blue-700;
 }
 
+.btn-cancel {
+    @apply bg-[#e3e9ed];
+}
+.btn-cancel:hover {
+    @apply bg-[#a7b6c2];
+}
+
 .btn-danger {
     @apply bg-red text-white;
 }

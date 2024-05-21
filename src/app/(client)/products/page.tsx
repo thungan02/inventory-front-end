@@ -4,7 +4,6 @@ import React, {useState} from 'react';
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import {TableProduct} from "@/components/Tables";
-import TableProviders from "@/components/Tables/TableProvider";
 import {CirclePlus} from "@/components/Icons";
 import FolderUp from "@/components/Icons/FolderUp";
 import Link from "next/link";

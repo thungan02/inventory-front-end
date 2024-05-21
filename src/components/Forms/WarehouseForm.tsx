@@ -191,8 +191,8 @@ const WarehouseForm = ({warehouse} : Props) => {
                         </div>
 
                         <Select label="Trạng thái" name="status" defaultValue="ENABLE">
-                            <option value="ENABLE">ENABLE</option>
-                            <option value="DISABLE">DISABLE</option>
+                            <option value="ENABLE">Đang hoạt động</option>
+                            <option value="DISABLE">Ngưng hoạt động</option>
                         </Select>
 
                         <div>

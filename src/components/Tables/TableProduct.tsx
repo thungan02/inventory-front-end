@@ -1,21 +1,72 @@
 "use client"
-import {Eye, Seach, Trash} from "@/components/Icons";
+import {Eye, Trash} from "@/components/Icons";
 import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {Product} from "@/models/Model";
+import {Category, Product} from "@/models/Model";
 import DeleteModal from "@/components/Modal/DeleteModal";
-import {deleteData} from "@/services/APIService";
-import {API_DELETE_PRODUCT} from "@/config/api";
-import SuccessModal from "@/components/Modal/SuccessModal";
+import {deleteData, getData} from "@/services/APIService";
+import {API_DELETE_PRODUCT, API_GET_ALL_CATEGORIES, API_GET_ALL_PRODUCTS} from "@/config/api";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
+import Image from "next/image";
+import InputMoneyDefault from "@/components/Inputs/InputMoneyDefault";
+import InputDefault from "@/components/Inputs/InputDefault";
+import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
+import DropdownInput from "@/components/Inputs/DropdownInput";
 
+const statusOptions : Option[] = [
+    {
+        key: "",
+        value: "Tất cả trạng thái"
+    },
+    {
+        key: "IN_STOCK",
+        value: "Đang bán"
+    },
+    {
+        key: "OUT_OF_STOCK",
+        value: "Hết hàng"
+    },
+    {
+        key: "TEMPORARILY_SUSPENDED",
+        value: "Tạm ngưng"
+    },
+]
+
+const filteredOptions : Option[] = [
+    {
+        key: "name",
+        value: "Tên sản phẩm"
+    },
+    {
+        key: "sku",
+        value: "Mã sản phẩm"
+    },
+]
 
 
 const TableProduct = () => {
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [categoryOptions, setCategoryOptions] = useState<Option[]>([{key: '', value: 'Tất cả danh mục'}]);
     const [productToDeleted, setProductToDeleted] = useState<Product | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
+
+    const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
+    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
+    const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+
+    const handleChangeStatusOption = (status: string) => {
+        setStatusOptionSelected(status);
+    }
+
+    const handleChangeCategoryOption = (category: string) => {
+        setCategoryOptionSelected(category);
+    }
+
+    const handleChangeFilteredOption = (type: string) => {
+        setFilteredOptionSelected(type);
+    }
 
     const handleClickDeleteProduct = (product: Product) => {
         setProductToDeleted(product);
@@ -26,7 +77,7 @@ const TableProduct = () => {
         await deleteData (API_DELETE_PRODUCT + '/' + productToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
-        getData();
+        getProducts(API_GET_ALL_PRODUCTS);
     }
 
     const handleCloseDeleteModal = () => {
@@ -34,24 +85,47 @@ const TableProduct = () => {
         setProductToDeleted(null);
     }
 
-    const getData = async () => {
-        await fetch("http://localhost:8000/api/v1/products")
-            .then(res => {
-                return res.json()
-            })
-            .then(data => {
-                setProducts(data);
-            })
-            .catch(err => {
-                console.log(err);
-            })
+    const getProducts = async (endpoint: string) => {
+        const newProducts : Product[] = await getData(endpoint);
+        setProducts(newProducts);
+    }
+
+    const getAllCategories = async () => {
+        const newCategories : Category[] = await getData(API_GET_ALL_CATEGORIES + "?type=PRODUCT");
+        setCategories(newCategories);
+    }
+
+    const handleResetFilters = () => {
+        setCategoryOptionSelected('');
+        setStatusOptionSelected('');
+    }
+
+    const handleSearch = () => {
+        let params : string = '';
+        if (statusOptionSelected !== '') {
+            params += '?status=' + statusOptionSelected;
+        }
+        getProducts(API_GET_ALL_PRODUCTS + params);
+    }
+
+    const categoryToOption = (category: Category) : Option => {
+        return {
+            key: category.id.toString(),
+            value: category.id + ' - ' + category.name
+        }
     }
 
     useEffect(() => {
-        getData();
+        getProducts(API_GET_ALL_PRODUCTS);
+        getAllCategories();
     }, []);
 
-    const columns: string[] = ["Mã sản phẩm", "Tên", "Giá", "Khối lượng tịnh", "Quy cách đóng gói", "Số lượng", "Trạng thái", "Thời gian cập nhật", ""];
+    useEffect(() => {
+        const options = [{key: '', value: 'Tất cả danh mục'}, ...categories.map(categoryToOption)];
+        setCategoryOptions(options);
+    }, [categories]);
+
+    const columns: string[] = ["Hình ảnh" ,"Mã sản phẩm", "Tên", "Giá", "Khối lượng tịnh", "Quy cách đóng gói", "Số lượng", "Trạng thái", "Thời gian cập nhật", ""];
     return (
         <Fragment>
             {
@@ -62,89 +136,110 @@ const TableProduct = () => {
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-                <div className="flex gap-3">
-                    <div className="w-90 mb-4">
-                        <div className="relative border rounded py-1 px-3">
-                            <button className="absolute left-2.5 top-1/2 -translate-y-1/2">
-                                <Seach/>
-                            </button>
+                <div className="grid sm:grid-cols-12 gap-3 mb-5">
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchCategory">Danh mục</label></div>
 
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm"
-                                className="w-full bg-transparent pl-9 pr-4 font-medium focus:outline-none text-xs"
-                            />
-                        </div>
+                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                        <SelectDefault options={categoryOptions} id="searchCategory" onChange={handleChangeCategoryOption} selectedValue={categoryOptionSelected}/>
                     </div>
-                    <div className="w-40">
-                        <select
-                            className="rounded w-full bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                            <option selected value={10}>Thêm bộ lọc</option>
-                            <option value={20}>Lọc theo tên</option>
-                        </select>
+                    <div className="flex items-center"><label className="text-sm font-bold">Tìm</label></div>
+
+                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                    </div>
+
+
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Trạng thái</label></div>
+
+                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                        <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption} selectedValue={statusOptionSelected}/>
+                    </div>
+
+                    <div className="flex items-center"><label className="text-sm font-bold">Giá</label></div>
+
+                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                        <InputMoneyDefault placeholder="Nhập giá thấp nhất" name="price"/>
+                        <div className="text-2xl mx-3">-</div>
+                        <InputMoneyDefault placeholder="Nhập giá cao nhất" name="price"/>
+                    </div>
+
+                    <div className="col-span-full flex flex-row gap-3">
+                        <button className="rounded px-4 py-2 text-white text-sm btn-blue" type="button" onClick={handleSearch}>Tìm</button>
+                        <button className="btn-cancel rounded px-4 py-2 text-sm" type="button" onClick={handleResetFilters}>Đặt lại</button>
                     </div>
                 </div>
                 <div className="max-w-full overflow-x-auto">
-                    <table className="w-full table-auto">
+                    <table className="w-full min-w-[950px] table-auto">
                         <thead>
                         <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
-                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
-                                <input type="checkbox"/>
+                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
+                                <div className="flex justify-center">
+                                    <input type="checkbox"/>
+                                </div>
                             </th>
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
+                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border text-center">
                                         {column}
                                     </th>
                                 ))
                             }
                         </tr>
                         </thead>
-                        <tbody className="text-left">
+                        <tbody className="text-left ">
                         {products.map((product: Product, key: number) => (
                             <tr key={key} className="text-xs">
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <input type="checkbox"/>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-x">
+                                    <div className="flex justify-center">
+                                        <input type="checkbox"/>
+                                    </div>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                    <div className="flex justify-center">
+                                        <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                               height={50}
+                                               className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                    </div>
+                                </td>
+                                <td className="w-fit border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
                                     <h5 className="font-medium text-black dark:text-white">
                                         {product.sku}
                                     </h5>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
                                     <h5 className="font-medium text-black dark:text-white">
                                         {product.name}
                                     </h5>
                                 </td>
 
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <h5 className="font-medium text-black dark:text-white">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                    <h5 className="font-medium text-black dark:text-white text-end">
                                         {new Intl.NumberFormat('vi-VN', {
                                             style: 'currency',
                                             currency: 'VND'
                                         }).format(product.price)}
                                     </h5>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                    <p className="text-black dark:text-white text-end">
                                         {product.weight} g
                                     </p>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
                                     <p className="text-black dark:text-white">
                                         {product.packing}
                                     </p>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                    <p className="text-black dark:text-white text-end">
                                         {product.quantity}
                                     </p>
                                 </td>
 
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
                                     <p
-                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
+                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium ${
                                             product.status === "IN_STOCK"
                                                 ? "bg-success text-success"
                                                 : product.status === "TEMPORARILY_SUSPENDED"
@@ -157,13 +252,13 @@ const TableProduct = () => {
                                         }
                                     </p>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
                                     <p className="text-black dark:text-white">
                                         {new Date(product.updated_at).toLocaleString()}
                                     </p>
                                 </td>
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <div className="flex items-center space-x-3.5">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-x">
+                                    <div className="flex justify-center items-center space-x-3.5">
                                         <Link href={`/products/${product.id}`}
                                               className="hover:text-primary"><Eye/></Link>
                                         <button className="hover:text-primary" type="button"

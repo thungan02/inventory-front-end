@@ -17,7 +17,7 @@ interface InputProps {
 const Input = ({label, feedback, placeholder, type, name, error = false, min, max, required=true, value, onChange, defaultValue}:InputProps) => {
     const id = useId();
     return (
-        <div className="w-full mb-6">
+        <div className="w-full mb-6 xsm:mb-3">
             <label className="block tracking-wide text-gray-700 text-sm font-bold mb-2"
                    htmlFor={id}>
                 {label}

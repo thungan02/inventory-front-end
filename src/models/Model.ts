@@ -104,3 +104,25 @@ export interface Discount {
     valid_until: Date;
     valid_start: Date;
 }
+
+export interface Discount {
+    id: number;
+    coupon_code: string;
+    minimum_order_value: number;
+    note: string;
+    maximum_discount_value: number;
+    discount_value: number;
+    discount_unit: string;
+    status: string;
+    valid_until: Date;
+    valid_start: Date;
+}
+
+export interface Category {
+    id: number;
+    name: string;
+    type: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}

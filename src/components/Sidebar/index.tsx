@@ -51,6 +51,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 {
                     name: "Tất cả sản phẩm",
                     path: "products"
+                },
+                {
+                    name: "Danh mục",
+                    path: "categories"
                 }
             ]
         },
@@ -189,7 +193,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <Link href="/">
                     <Image
                         width={176}
-                        height={32}
+                        height={38}
                         src={"/images/logo/logo_test1.png"}
                         alt="Logo"
                         priority

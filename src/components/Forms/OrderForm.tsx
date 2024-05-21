@@ -19,7 +19,6 @@ import ContainerModal from "@/components/Modal/ContainerModal";
 import HeaderModal from "@/components/Modal/HeaderModal";
 import BodyModal from "@/components/Modal/BodyModal";
 import FooterModal from "@/components/Modal/FooterModal";
-import Demo from "@/components/Modal/Demo";
 
 interface Props {
     order?: Order;
@@ -68,7 +67,7 @@ let productsExample: Product[] = [
 ];
 
 const OrderForm = ({order}: Props) => {
-    const columns: string[] = ["Sản phẩm", "", "Quy cách đóng gói", "Số lượng", "Giá (đ)", "Thành tiền (đ)", ""];
+    const columns: string[] = ["Sản phẩm", "", "Quy cách đóng gói", "Số lượng", "Sẵn có", "Giá (đ)", "Thành tiền (đ)", ""];
     const router = useRouter();
     const pathname = usePathname();
     const inputProductImage = useRef<HTMLInputElement>(null);
@@ -81,6 +80,8 @@ const OrderForm = ({order}: Props) => {
 
     const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('')
+    const [searchInputInModal, setSearchInputInModal] = useState<string>('')
+    const searchInputInModalRef = useRef<HTMLInputElement>(null);
 
     const handleChangeProvince = async (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedId = event.target.value;
@@ -119,8 +120,11 @@ const OrderForm = ({order}: Props) => {
     }
 
     const handleChangeSearchInput = (event : React.ChangeEvent<HTMLInputElement>) => {
-        setShowSearchProductModal(true);
-        setSearchInput(event.target.value);
+        if (!showSearchProductModal && searchInputInModalRef.current) {
+            setShowSearchProductModal(true);
+            setSearchInputInModal(event.target.value);
+            searchInputInModalRef.current.focus();
+        }
     }
     const openInputImage = () => {
         inputProductImage.current?.click();
@@ -194,7 +198,79 @@ const OrderForm = ({order}: Props) => {
                 <ContainerModal>
                     <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
                     <BodyModal>
-                        <InputDefault placeholder="Nhập tên" value={searchInput} type="text" name="search" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}/>
+                        <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef} value={searchInputInModal} type="text" name="search" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInputInModal(e.target.value)}/>
+                        <div className="pt-5">
+                            <div className="overflow-x-auto min-w-[900px]">
+                                <table className="w-full table-auto">
+                                    <thead>
+                                    <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                                        {
+                                            columns.map((column: string, index: number) => (
+                                                <th key={"columns-" + index}
+                                                    className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
+                                                    {column}
+                                                </th>
+                                            ))
+                                        }
+                                    </tr>
+                                    </thead>
+                                    <tbody className="text-left">
+                                    {productsExample.map((product: Product, key: number) => (
+                                        <tr key={key} className="text-xs border-b border-[#eee]">
+                                            <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
+                                                <div className="flex flex-row gap-2">
+                                                    <div>
+                                                        <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                                               height={50}
+                                                               className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                                    </div>
+                                                    <div>
+                                                        <a href={`/products/${product.id}`} target="_blank"
+                                                           className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
+                                                        <div>SKU: {product.sku}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-3 dark:border-strokedark">
+                                                {product.packing}
+                                            </td>
+                                            <td className="px-2 py-3 dark:border-strokedark">
+                                                <input defaultValue={1} min={0} type="number"
+                                                       className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                            </td>
+                                            <td className="px-2 py-3 dark:border-strokedark">
+                                                {product.quantity}
+                                            </td>
+
+                                            <td className="px-2 py-3 dark:border-strokedark">
+                                                <h5 className="font-medium text-black dark:text-white">
+                                                    {new Intl.NumberFormat('vi-VN', {
+                                                        style: 'currency',
+                                                        currency: 'VND'
+                                                    }).format(product.price)}
+                                                </h5>
+                                            </td>
+                                            <td className="px-2 py-3 dark:border-strokedark">
+                                                <h5 className="font-medium text-black dark:text-white">
+                                                    {new Intl.NumberFormat('vi-VN', {
+                                                        style: 'currency',
+                                                        currency: 'VND'
+                                                    }).format(product.price)}
+                                                </h5>
+                                            </td>
+
+                                            <td className="px-2 py-3 dark:border-strokedark">
+                                                <div className="flex items-center space-x-3.5">
+                                                    <button className="hover:text-primary" type="button"><Trash/>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </BodyModal>
                     <FooterModal/>
                 </ContainerModal>
@@ -204,7 +280,89 @@ const OrderForm = ({order}: Props) => {
 
     return (
         <Fragment>
-            <SearchProductModal/>
+            {
+                showSearchProductModal && (
+                    <ContainerModal>
+                        <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
+                        <BodyModal>
+                            <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef} value={searchInputInModal} type="text" name="search" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInputInModal(e.target.value)}/>
+                            <div className="pt-5">
+                                <div className="overflow-x-auto min-w-[900px]">
+                                    <table className="w-full table-auto">
+                                        <thead>
+                                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                                            {
+                                                columns.map((column: string, index: number) => (
+                                                    <th key={"columns-" + index}
+                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
+                                                        {column}
+                                                    </th>
+                                                ))
+                                            }
+                                        </tr>
+                                        </thead>
+                                        <tbody className="text-left">
+                                        {productsExample.map((product: Product, key: number) => (
+                                            <tr key={key} className="text-xs border-b border-[#eee]">
+                                                <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
+                                                    <div className="flex flex-row gap-2">
+                                                        <div>
+                                                            <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                                                   height={50}
+                                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                                        </div>
+                                                        <div>
+                                                            <a href={`/products/${product.id}`} target="_blank"
+                                                               className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
+                                                            <div>SKU: {product.sku}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                    {product.packing}
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                    <input defaultValue={1} min={0} type="number"
+                                                           className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                    {product.quantity}
+                                                </td>
+
+                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                    <h5 className="font-medium text-black dark:text-white">
+                                                        {new Intl.NumberFormat('vi-VN', {
+                                                            style: 'currency',
+                                                            currency: 'VND'
+                                                        }).format(product.price)}
+                                                    </h5>
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                    <h5 className="font-medium text-black dark:text-white">
+                                                        {new Intl.NumberFormat('vi-VN', {
+                                                            style: 'currency',
+                                                            currency: 'VND'
+                                                        }).format(product.price)}
+                                                    </h5>
+                                                </td>
+
+                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                    <div className="flex items-center space-x-3.5">
+                                                        <button className="hover:text-primary" type="button"><Trash/>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </BodyModal>
+                        <FooterModal/>
+                    </ContainerModal>
+                )
+            }
             {
                 insertSuccess && (
                     pathname.toString().includes('new') ?
@@ -346,6 +504,9 @@ const OrderForm = ({order}: Props) => {
                                             <input defaultValue={1} min={0} type="number"
                                                    className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
                                         </td>
+                                        <td className="px-2 py-3 dark:border-strokedark">
+                                            {product.quantity}
+                                        </td>
 
                                         <td className="px-2 py-3 dark:border-strokedark">
                                             <h5 className="font-medium text-black dark:text-white">
@@ -425,10 +586,6 @@ const OrderForm = ({order}: Props) => {
 
                     <button className="btn btn-blue text-sm inline-flex items-center gap-2" type="submit">
                         <span className="hidden xl:block">{order ? "Đã thanh toán" : "Lưu"}</span>
-                    </button>
-
-                    <button className="btn btn-blue text-sm inline-flex items-center gap-2" type="submit">
-                        <span className="hidden xl:block">{order ? "Thanh toán sau" : "Lưu"}</span>
                     </button>
                 </div>
             </form>

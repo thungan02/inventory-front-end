@@ -25,15 +25,40 @@ const ProviderForm = ({provider}: Props) => {
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
-    const [selectedProvinceName, setSelectedProvinceName] = useState<string>('');
-    const [selectedDistrictName, setSelectedDistrictName] = useState<string>('');
+    const [selectedProvince, setSelectedProvince] = useState<Province>();
+    const [selectedDistrict, setSelectedDistrict] = useState<District>();
+    const [selectedWard, setSelectedWard] = useState<Ward>();
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
+
+    useEffect(() => {
+        const initialAddress = async () => {
+            if (provider) {
+                const provinceResult: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
+                setProvinces(provinceResult.results);
+                const province = provinceResult.results.find(province => province.province_name === provider.city);
+                setSelectedProvince(province);
+
+                const districtsResult: DistrictResponse = await getData(API_GET_ALL_DISTRICTS + '/' + province?.province_id);
+                setDistricts(districtsResult.results);
+
+                const district = districtsResult.results.find(district => district.district_name === provider.district);
+                setSelectedDistrict(district);
+
+                const wardsResult: WardResponse = await getData(API_GET_ALL_WARDS + '/' + district?.district_id);
+                setWards(wardsResult.results);
+
+                const ward = wardsResult.results.find(ward => ward.ward_name === provider.ward);
+                setSelectedWard(ward);
+            }
+        }
+        initialAddress();
+    }, [provider]);
 
 
     const handleChangeProvince = async (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedId = event.target.value;
-        const selectedName = provinces.find(province => province.province_id === selectedId)?.province_name || '';
-        setSelectedProvinceName(selectedName);
+        const selected = provinces.find(province => province.province_id === selectedId);
+        setSelectedProvince(selected);
 
         if (selectedId) {
             try {
@@ -51,8 +76,8 @@ const ProviderForm = ({provider}: Props) => {
 
     const handleChangeDistrict = async (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedId = event.target.value;
-        const selectedName = districts.find(district => district.district_id === selectedId)?.district_name || '';
-        setSelectedDistrictName(selectedName);
+        const selected = districts.find(district => district.district_id === selectedId);
+        setSelectedDistrict(selected);
 
         if (selectedId) {
             try {
@@ -64,6 +89,12 @@ const ProviderForm = ({provider}: Props) => {
         } else {
             setWards([])
         }
+    }
+
+    const handleChangeWard = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedId = event.target.value;
+        const selected = wards.find(ward => ward.ward_id === selectedId);
+        setSelectedWard(selected);
     }
 
     const openInputImage = () => {
@@ -93,12 +124,15 @@ const ProviderForm = ({provider}: Props) => {
             setError('Email là bắt buộc');
             return;
         }
-        formData.set('city', selectedProvinceName);
-        formData.set('district', selectedDistrictName);
-
-        const wardId = formData.get('ward') as string;
-        const selectedWardName = wards.find(ward => ward.ward_id === wardId)?.ward_name || '';
-        formData.set('ward', selectedWardName);
+        if (selectedProvince) {
+            formData.set('city', selectedProvince.province_name);
+        }
+        if (selectedDistrict) {
+            formData.set('district', selectedDistrict.district_name);
+        }
+        if (selectedWard) {
+            formData.set('ward', selectedWard.ward_name);
+        }
 
         console.log(JSON.stringify(Object.fromEntries(formData)));
 
@@ -135,9 +169,8 @@ const ProviderForm = ({provider}: Props) => {
 
     useEffect(() => {
         const getAllProvinces = async () => {
-            const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
-            setProvinces(result.results);
-            console.log(result.results);
+            const provinceResult: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
+            setProvinces(provinceResult.results);
         }
 
         getAllProvinces();
@@ -184,8 +217,8 @@ const ProviderForm = ({provider}: Props) => {
                                type="text" name="address"/>
 
                         <div className="grid grid-cols-3 gap-3">
-                            <Select label="Thành phố/Tỉnh" name="city" defaultValue="" onChange={handleChangeProvince}>
-                                <option>Chọn thành phố/tỉnh</option>
+                            <Select label="Thành phố/Tỉnh" name="city" value={selectedProvince?.province_id || ''} onChange={handleChangeProvince}>
+                                <option value="">Chọn thành phố/tỉnh</option>
                                 {
                                     provinces.map((province: Province) => (
                                         <option key={province.province_id}
@@ -194,8 +227,8 @@ const ProviderForm = ({provider}: Props) => {
                                 }
                             </Select>
 
-                            <Select label="Quận/Huyện" name="district" defaultValue="" onChange={handleChangeDistrict}>
-                                <option>Chọn quận/huyện</option>
+                            <Select label="Quận/Huyện" name="district" value={selectedDistrict?.district_id || ''} onChange={handleChangeDistrict}>
+                                <option value="">Chọn quận/huyện</option>
                                 {
                                     districts.map((district: District) => (
                                         <option key={district.district_id}
@@ -204,8 +237,8 @@ const ProviderForm = ({provider}: Props) => {
                                 }
                             </Select>
 
-                            <Select label="Phường/xã" name="ward" defaultValue="Phường 1">
-                                <option>Chọn xã/phường</option>
+                            <Select label="Phường/xã" name="ward" value={selectedWard?.ward_id || ''} onChange={handleChangeWard}>
+                                <option value="">Chọn xã/phường</option>
                                 {
                                     wards.map((ward: Ward) => (
                                         <option key={ward.ward_id} value={ward.ward_id}>{ward.ward_name}</option>
