@@ -1,141 +1,118 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
+import {Eye, Trash} from "@/components/Icons";
 import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {Provider, Warehouse} from "@/models/Model";
-import DeleteModal from "@/components/Modal/DeleteModal";
+import {ImportProductReceipt} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
-    API_DELETE_WAREHOUSE,
-    API_GET_ALL_PROVIDERS,
-    API_GET_ALL_WAREHOUSES
+    API_DELETE_IMPORT_PRODUCT_RECEIPT,
+    API_IMPORT_PRODUCT_RECEIPTS, API_GET_ALL_IMPORT_PRODUCT_RECEIPT,
 } from "@/config/api";
-import SuccessModal from "@/components/Modal/SuccessModal";
+import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
-import warehouse from "@/components/Icons/Warehouse";
 
 const statusOptions : Option[] = [
     {
         key: "",
-        value: "Tất cả trạng thái"
+        value: "Tất cả loại"
     },
     {
-        key: "ENABLE",
-        value: "Đang hoạt động"
+        key: "NORMAL",
+        value: "Thông thường"
     },
     {
-        key: "DISABLE",
-        value: "Không hoạt động"
-    },
-    {
-        key: "TEMPORARILY_SUSPENDED",
-        value: "Tạm ngưng"
+        key: "RETURN",
+        value: "Hoàn trả"
     },
 ]
 
 const filteredOptions : Option[] = [
     {
         key: "name",
-        value: "Tên nhà kho"
-    },
-    {
-        key: "sku",
-        value: "Mã nhà kho"
+        value: "Tên kho"
     },
 ]
-
-const TableWarehouse = () => {
-    const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-    const [warehouseToDeleted, setWarehouseToDeleted] = useState<Warehouse | null>(null);
+const TableImportProduct = () => {
+    const [receipts, setReceipts] = useState<ImportProductReceipt[]>([]);
+    const [receipt, setReceipt] = useState<ImportProductReceipt | null>();
+    const [receiptToDeleted, setReceiptToDeleted] = useState<ImportProductReceipt | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [phoneFilter, setPhoneFilter] = useState<string>('');
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
     }
 
-    const handleChangeCategoryOption = (category: string) => {
-        setCategoryOptionSelected(category);
-    }
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteProduct = (warehouse: Warehouse) => {
-        setWarehouseToDeleted(warehouse);
+    const handleClickDeleteImportProductReceipt = (importProductReceipt: ImportProductReceipt) => {
+        setReceipt(importProductReceipt);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_WAREHOUSE + '/' + warehouseToDeleted?.id)
+        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receiptToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
-        getWarehouses(API_GET_ALL_WAREHOUSES);
+        getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);
+    }
+
+    const getImportProductReceipts = async (endpoint: string) => {
+        const newImportProductReceipts : ImportProductReceipt[] = await getData(endpoint);
+        setReceipts(newImportProductReceipts);
     }
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setWarehouseToDeleted(null);
+        setReceipt(null);
     }
-
-    const handleClickDeleteWarehouse = (warehouse: Warehouse) => {
-        setWarehouseToDeleted(warehouse);
-        setIsOpenDeleteModal(true);
-    }
-
-    const getWarehouses = async (endpoint: string) => {
-        const newWarehouses : Warehouse[] = await getData(endpoint);
-        setWarehouses(newWarehouses);
-    }
-
 
     const handleResetFilters = () => {
-        setCategoryOptionSelected('');
         setStatusOptionSelected('');
     }
 
     const handleSearch = () => {
         let params : string = '';
         if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+            params += '?type=' + statusOptionSelected;
         }
-        getWarehouses(API_GET_ALL_WAREHOUSES + params);
+        getImportProductReceipts(API_IMPORT_PRODUCT_RECEIPTS + params);
     }
+
     useEffect(() => {
-        getWarehouses(API_GET_ALL_WAREHOUSES)
+        getImportProductReceipts(API_IMPORT_PRODUCT_RECEIPTS)
     }, []);
 
-    const columns : string[] = ["ID", "Tên", "Địa chỉ", "Trạng thái", "Thời gian hoạt động", "Ghi chú", ""];
+    const columns : string[] = ["ID", "Kho", "Ngày nhận", "Loại", "Ghi chú", ""];
     return (
         <Fragment>
             {
-                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhập kho sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${warehouseToDeleted?.id} - ${warehouseToDeleted?.name} - ${warehouseToDeleted?.address}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa nhập kho sản phẩm`} message={`Bạn chắc chắn muốn xóa nhập kho sản phẩm ${receipt?.id}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
 
-                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
-                    </div>
-
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Trạng
-                        thái</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Phân loại</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption}
                                        selectedValue={statusOptionSelected}/>
+                    </div>
+
+                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
+                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -146,12 +123,11 @@ const TableWarehouse = () => {
                                 onClick={handleResetFilters}>Đặt lại
                         </button>
                     </div>
-
                 </div>
                 <div className="max-w-full overflow-x-auto">
                     <table className="w-full table-auto">
                         <thead>
-                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4 ">
                             <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
                                 <div className="flex justify-center">
                                     <input type="checkbox"/>
@@ -168,7 +144,7 @@ const TableWarehouse = () => {
                         </tr>
                         </thead>
                         <tbody className="text-left">
-                        {warehouses.map((warehouses: Warehouse, key: number) => (
+                        {receipts.map((importProductReceipt: ImportProductReceipt, key: number) => (
                             <tr key={key} className="text-xs">
                                 <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-x">
                                     <div className="flex justify-center">
@@ -177,50 +153,51 @@ const TableWarehouse = () => {
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p className="text-black dark:text-white text-center">
-                                        {warehouses.id}
+                                        {importProductReceipt.id}
                                     </p>
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
-                                        {warehouses.name}
-                                    </p>
+                                    <h5 className="font-medium text-black dark:text-white">
+                                        {importProductReceipt.warehouse.name}
+                                    </h5>
                                 </td>
+
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p className="text-black dark:text-white">
-                                        {warehouses.address}, {warehouses.ward}, {warehouses.district}, {warehouses.city}
+                                        {new Date(importProductReceipt.receipt_date).toLocaleString()}
                                     </p>
                                 </td>
+
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p
                                         className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium text-xs ${
-                                            warehouses.status === "ENABLE"
+                                            importProductReceipt.type === "NORMAL"
                                                 ? "bg-success text-success"
-                                                : warehouses.status === "TEMPORARILY_SUSPENDED"
+                                                : importProductReceipt.type === "RETURN"
                                                     ? "bg-danger text-danger"
                                                     : "bg-warning text-warning"
                                         }`}
                                     >
                                         {
-                                            warehouses.status === "ENABLE" ? "Đang hoạt động" : (warehouses.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Không hoạt động")
+                                            importProductReceipt.type === "NORMAL" ? "Thông thường" : "Hoàn trả"
                                         }
                                     </p>
                                 </td>
+
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
-                                        {new Date(warehouses.created_at).toLocaleString()}
-                                    </p>
+                                    <h5 className="font-medium text-black dark:text-white">
+                                        {importProductReceipt.note}
+                                    </h5>
                                 </td>
+
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
-                                        {warehouses.note}
-                                    </p>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <div className="flex items-center space-x-3.5 justify-center">
-                                    <Link href={`/warehouses/${warehouses.id}`}
+                                    <div className="flex items-center justify-center space-x-3.5">
+                                        <Link href={`/import-products/${importProductReceipt.id}`}
                                               className="hover:text-primary"><Eye/></Link>
                                         <button className="hover:text-primary" type="button"
-                                                onClick={() => handleClickDeleteWarehouse(warehouses)}><Trash/></button>
+                                                onClick={() => handleClickDeleteImportProductReceipt(importProductReceipt)}>
+                                            <Trash/>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -253,4 +230,4 @@ const TableWarehouse = () => {
     );
 };
 
-export default TableWarehouse;
+export default TableImportProduct;

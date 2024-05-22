@@ -9,7 +9,6 @@ import {API_DELETE_PRODUCT, API_GET_ALL_CATEGORIES, API_GET_ALL_PRODUCTS} from "
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import Image from "next/image";
 import InputMoneyDefault from "@/components/Inputs/InputMoneyDefault";
-import InputDefault from "@/components/Inputs/InputDefault";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
 
@@ -51,7 +50,6 @@ const TableProduct = () => {
     const [productToDeleted, setProductToDeleted] = useState<Product | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
-
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
@@ -138,25 +136,21 @@ const TableProduct = () => {
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
                     <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchCategory">Danh mục</label></div>
-
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={categoryOptions} id="searchCategory" onChange={handleChangeCategoryOption} selectedValue={categoryOptionSelected}/>
                     </div>
-                    <div className="flex items-center"><label className="text-sm font-bold">Tìm</label></div>
 
+                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
                     </div>
 
-
                     <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Trạng thái</label></div>
-
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption} selectedValue={statusOptionSelected}/>
                     </div>
 
                     <div className="flex items-center"><label className="text-sm font-bold">Giá</label></div>
-
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <InputMoneyDefault placeholder="Nhập giá thấp nhất" name="price"/>
                         <div className="text-2xl mx-3">-</div>
@@ -232,12 +226,12 @@ const TableProduct = () => {
                                     </p>
                                 </td>
                                 <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
-                                    <p className="text-black dark:text-white text-end">
+                                    <p className="text-black dark:text-white text-center">
                                         {product.quantity}
                                     </p>
                                 </td>
 
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l text-xs">
                                     <p
                                         className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium ${
                                             product.status === "IN_STOCK"
