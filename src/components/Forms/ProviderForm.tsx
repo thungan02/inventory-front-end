@@ -35,6 +35,7 @@ const ProviderForm = ({provider}: Props) => {
             if (provider) {
                 const provinceResult: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
                 setProvinces(provinceResult.results);
+
                 const province = provinceResult.results.find(province => province.province_name === provider.city);
                 setSelectedProvince(province);
 

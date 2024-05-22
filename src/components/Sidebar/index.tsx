@@ -71,10 +71,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     name: "Tạo đơn nháp",
                     path: "add"
                 },
-                {
-                    name: "Cập nhật đơn hàng",
-                    path: "update"
-                },
             ]
         },
         {
@@ -107,16 +103,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             icon: <Fence/>,
             sub: [
                 {
-                    name: "Danh sách thành phẩm",
-                    path: "inventory"
+                    name: "Nhập kho nguyên vật liệu",
+                    path: "import-materials"
                 },
                 {
-                    name: "Nhap kho thành phẩm",
-                    path: "nhap-kho-thanh-pham"
+                    name: "Xuất kho nguyên vật liệu",
+                    path: "export-materials"
+                },
+                {
+                    name: "Nhập kho thành phẩm",
+                    path: "import-products"
                 },
                 {
                     name: "Xuất kho thành phẩm",
-                    path: "xuat-kho-thanh-pham"
+                    path: "export-products"
                 },
             ]
         },

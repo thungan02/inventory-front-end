@@ -36,6 +36,7 @@ export interface Material {
     packing: string;
     origin: string;
     price: number;
+    unit: string;
     note: string;
     status: string;
     quantity: number;
@@ -48,6 +49,9 @@ export interface Customer {
     id: number;
     group_customer_id: number;
     name: string;
+    city: string;
+    district: string;
+    ward: string;
     birthday: Date;
     gender: boolean;
     phone: string;
@@ -125,4 +129,45 @@ export interface Category {
     status: string;
     created_at: string;
     updated_at: string;
+}
+
+export interface ExportMaterialReceipt {
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ImportMaterialReceipt{
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    total_price: number;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ExportProductReceipt {
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ImportProductReceipt{
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
 }
