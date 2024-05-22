@@ -2,11 +2,18 @@
 import React, {useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {Metadata} from "next";
 import {AuthBg, Clock, Email, Google,} from "@/components/Icons";
-import {redirect} from "next/navigation";
+import {useRouter} from "next/navigation";
+import {toast} from "react-toastify";
+import Cookies from "js-cookie";
+
+interface LoginResponse {
+    accessToken: string;
+    refreshToken: string;
+}
 
 const Login: React.FC = () => {
+    const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -16,7 +23,7 @@ const Login: React.FC = () => {
     const  passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()-_=+{};:',<.>/?])(?=.*\d).{8,32}$/;
     const [passwordError, setPasswordError]=useState(false);
 
-    const onLogin = () => {
+    const onLogin = async () : Promise<LoginResponse | void> => {
         if (!emailRegex.test(email)) {
             setEmailError(true);
         }
@@ -30,7 +37,21 @@ const Login: React.FC = () => {
         else {
             setPasswordError(false);
         }
-
+        const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({email: email, password: password})
+        });
+        if (response.ok) {
+            toast.success('Đăng nhập thành công');
+            const data = await response.json();
+            Cookies.set('token', JSON.stringify(data));
+            router.push('/');
+        } else {
+            toast.error('Đã có lỗi xảy ra. Thử lại sau');
+        }
     }
 
     return (

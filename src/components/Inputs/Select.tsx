@@ -4,12 +4,15 @@ interface SelectProps {
     label: string;
     name: string;
     children: React.ReactNode;
-    defaultValue: string | number;
-    onChange?: () => avoid;
+    defaultValue?: string | number | readonly string[] | undefined;
+    value?: string | number | readonly string[] | undefined;
+    onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => Promise<void> | undefined;
 }
 
-const Select = ({label, name, children, defaultValue, onChange}: SelectProps) => {
+const Select = ({label, name, children, defaultValue, onChange, value}: SelectProps) => {
     const id: string = useId();
+    const handleDefaultChange = (event: React.ChangeEvent<HTMLSelectElement>) => {};
+    const handleChange = onChange || handleDefaultChange;
     return (
         <div className="w-full mb-6">
             <label className="block tracking-wide text-gray-700 text-sm font-bold mb-2" htmlFor={id}>
@@ -20,8 +23,9 @@ const Select = ({label, name, children, defaultValue, onChange}: SelectProps) =>
                     className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-2 px-4 mb-3 text-xs rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     id={id}
                     name={name}
-                    onChange={onChange}
+                    onChange={handleChange}
                     defaultValue={defaultValue}
+                    value={value}
                 >
                     {children}
                 </select>

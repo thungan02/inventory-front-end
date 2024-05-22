@@ -8,14 +8,13 @@ export interface Product {
     description: string;
     status: string;
     quantity: number;
-    weight: string;
+    weight: number;
     created_at: Date;
     updated_at: Date;
 }
 
 export interface Order {
     id: number;
-    customer_id: number;
     created_by: string;
     address: string;
     phone: string;
@@ -25,6 +24,7 @@ export interface Order {
     ward: string;
     district: string;
     total_price: number;
+    customer: Customer;
     status: string;
     created_at: Date;
     updated_at: Date;
@@ -36,6 +36,7 @@ export interface Material {
     packing: string;
     origin: string;
     price: number;
+    unit: string;
     note: string;
     status: string;
     quantity: number;
@@ -48,6 +49,9 @@ export interface Customer {
     id: number;
     group_customer_id: number;
     name: string;
+    city: string;
+    district: string;
+    ward: string;
     birthday: Date;
     gender: boolean;
     phone: string;
@@ -100,6 +104,70 @@ export interface Discount {
     maximum_discount_value: number;
     discount_value: number;
     discount_unit: string;
+    status: string;
     valid_until: Date;
     valid_start: Date;
+}
+
+export interface Discount {
+    id: number;
+    coupon_code: string;
+    minimum_order_value: number;
+    note: string;
+    maximum_discount_value: number;
+    discount_value: number;
+    discount_unit: string;
+    status: string;
+    valid_until: Date;
+    valid_start: Date;
+}
+
+export interface Category {
+    id: number;
+    name: string;
+    type: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ExportMaterialReceipt {
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ImportMaterialReceipt{
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    total_price: number;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ExportProductReceipt {
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ImportProductReceipt{
+    id: number;
+    note: string | null;
+    receipt_date: Date;
+    type: string;
+    warehouse: Warehouse;
+    created_at: Date;
+    updated_at: Date;
 }

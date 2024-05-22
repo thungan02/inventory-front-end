@@ -7,16 +7,18 @@ import Tooltip from "@/components/comon/Tooltip";
 import Image from "next/image";
 import Editor from "@/components/Inputs/Editor";
 import Alert from "@/components/Alert";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import Link from "next/link";
 import {Product} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
+import InputMoney from "@/components/Inputs/InputMoney";
 
 interface Props {
     product?: Product;
 }
 const ProductForm = ({product} : Props) => {
     const router = useRouter();
+    const pathname = usePathname();
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -80,6 +82,9 @@ const ProductForm = ({product} : Props) => {
             setError('Quy cách đóng gói là bắt buộc');
             return;
         }
+        let price : string = formData.get('price') as string;
+        price = price.replace(/\D/g, '');
+        formData.set('price', price)
 
         const method = (product ? "PUT" : "POST");
         const response = await fetch(`http://localhost:8000/api/v1/products${product?.id ? "/" + product.id : ''}`,
@@ -117,7 +122,11 @@ const ProductForm = ({product} : Props) => {
     return (
         <Fragment>
             {
-                insertSuccess && <SuccessModal title="Thành công" message="Thêm sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                insertSuccess && (
+                    pathname.toString().includes('new') ?
+                        <SuccessModal title="Thành công" message="Thêm sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/> :
+                        <SuccessModal title="Thành công" message="Cập nhật sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                )
             }
             <form onSubmit={onSubmitProductForm}>
                 {
@@ -131,24 +140,22 @@ const ProductForm = ({product} : Props) => {
 
                     <div className="py-2">
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid sm:grid-cols-2 sm:gap-3 xsm:grid-cols-1 xsm:gap-0">
                             <Input label="Mã sản phẩm" feedback="Mã là bắt buộc" placeholder="Nhập mã sản phẩm"
                                    type="text" name="sku" defaultValue={product?.sku}/>
                             <Input label="Tên sản phẩm" feedback="Tên sản phẩm là bắt buộc"
                                    placeholder="Nhập tên sản phẩm"
                                    type="text" name="name" defaultValue={product?.name}/>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input label="Giá sản phẩm" feedback="Giá là bắt buộc" placeholder="Nhập giá sản phẩm"
-                                   type="number"
-                                   defaultValue={product?.price}
-                                   name="price" min={0}/>
+                        <div className="grid sm:grid-cols-2 xsm:grid-cols-1 xsm:gap-0 sm:gap-3">
+                            <InputMoney label="Giá sản phẩm" placeholder="Nhập giá sản phẩm" name="price" value={product?.price}/>
+
                             <Input label="Số lượng" feedback="Số lượng hiện có là bắt buộc"
                                    placeholder="Nhập số lượng sản phẩm"
                                    defaultValue={product?.quantity}
                                    type="number" name="quantity" min={0}/>
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid lg:grid-cols-3 sm:gap-3 xsm:grid-cols-1 xsm:gap-0">
                             <Input label="Khối lượng" feedback="Khối lượng là bắt buộc"
                                    placeholder="Nhập khối lượng sản phẩm"
                                    type="number"
@@ -160,7 +167,7 @@ const ProductForm = ({product} : Props) => {
                                    defaultValue={product?.packing}
                                    type="text" name="packing"/>
 
-                            <Select label="Trạng thái" name="status" defaultValue="IN_STOCK">
+                            <Select label="Trạng thái" name="status" defaultValue={product?.status}>
                                 <option value="IN_STOCK">Đang bán</option>
                                 <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
                                 <option value="OUT_OF_STOCK">Hết hàng</option>

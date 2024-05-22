@@ -1,4 +1,4 @@
-import React, {useId} from 'react';
+import React, {forwardRef, useId} from 'react';
 
 interface Props {
     placeholder: string;
@@ -8,29 +8,32 @@ interface Props {
     max?: number;
     required?: boolean;
     value?: string | number | readonly string[] | undefined;
-    onChange?: () => void;
+    onChange?: React.ChangeEventHandler<HTMLInputElement> | undefined;
     defaultValue?: string | number | readonly string[] | undefined;
 }
 
-const InputDefault = ({
-                          placeholder,
-                          type,
-                          name,
-                          min,
-                          max,
-                          required = true,
-                          value,
-                          onChange,
-                          defaultValue
-                      }: Props) => {
+const InputDefault = forwardRef<HTMLInputElement, Props>(({
+    placeholder,
+    type,
+    name,
+    min,
+    max,
+    required = true,
+    value,
+    onChange,
+    defaultValue,
+}, ref) => {
     const id = useId();
     return (
         <input onChange={onChange}
                defaultValue={defaultValue}
                value={value}
+               ref={ref}
                className="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded text-xs py-2 px-4 leading-tight focus:outline-none focus:bg-white"
                name={name} id={id} type={type} placeholder={placeholder} min={min} max={max} required={required}/>
     );
-};
+})
+
+InputDefault.displayName = 'InputDefault';
 
 export default InputDefault;
