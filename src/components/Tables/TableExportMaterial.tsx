@@ -60,7 +60,7 @@ const TableExportMaterial = () => {
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_EXPORT_MATERIAL_RECEIPT + '/' + receiptToDeleted?.id)
+        await deleteData (API_DELETE_EXPORT_MATERIAL_RECEIPT + '/' + receipt?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getExportMaterialReceipts(API_GET_ALL_EXPORT_MATERIAL_RECEIPT);

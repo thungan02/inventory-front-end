@@ -59,7 +59,7 @@ const TableImportProduct = () => {
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receiptToDeleted?.id)
+        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receipt?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);

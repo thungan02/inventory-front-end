@@ -4,6 +4,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import FolderUp from "@/components/Icons/FolderUp";
 import Link from "next/link";
 import {CirclePlus} from "@/components/Icons";
+import TableImportMaterial from "@/components/Tables/TableImportMaterial";
 import TableExportMaterial from "@/components/Tables/TableExportMaterial";
 
 const ExportMaterialPage = () => {

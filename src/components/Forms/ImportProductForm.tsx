@@ -14,20 +14,20 @@ import {
     Product,
     Material,
     ImportMaterialReceiptDetail,
-    ExportMaterialReceipt,
-    ExportMaterialReceiptDetail
+    ImportMaterialReceipt,
+    ImportProductReceipt, ImportProductReceiptDetail
 } from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
 
 interface Props {
-    receipt?: ExportMaterialReceipt;
-    receiptDetails?: ExportMaterialReceiptDetail[];
+    receipt?: ImportProductReceipt;
+    receiptDetails?: ImportProductReceiptDetail[];
 }
 
-const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
+const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", ""];
+    const columns: string[] = ["Sản phẩm", "Số lượng", "Đơn vị tính", ""];
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -98,7 +98,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
 
         const method = (receipt ? "PUT" : "POST");
 
-        const response = await fetch(`http://localhost:8000/api/v1/materials${receipt?.id ? "/" + receipt.id : ''}`,
+        const response = await fetch(`http://localhost:8000/api/v1/products${receipt?.id ? "/" + receipt.id : ''}`,
             {
                 method: method,
                 body: JSON.stringify(Object.fromEntries(formData)),
@@ -128,7 +128,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     return (
         <Fragment>
             {
-                insertSuccess && <SuccessModal title="Thành công" message="Thêm nguyên vật liệu thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                insertSuccess && <SuccessModal title="Thành công" message="Thêm nhập kho sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
             }
             <form onSubmit={onSubmitMaterialForm}>
                 {
@@ -146,11 +146,11 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                defaultValue={receipt?.id}
                                type="text" name=""/>
 
-                        <SeachInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name=""/>
+                        <SeachInput label="Tên kho" placeholder="Chọn tên kho" name=""/>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <Input label="Ngày xuất" feedback="Ngày xuất"
-                                   placeholder="Nhập ngày xuất"
+                            <Input label="Ngày nhập" feedback="Ngày nhập"
+                                   placeholder="Nhập ngày nhập"
                                    type="date" name="receipt_date"
                                    defaultValue={receipt?.receipt_date && new Date(receipt?.receipt_date).toISOString().split('T')[0]}/>
 
@@ -170,11 +170,11 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                 <div
                     className="rounded-sm border border-stroke bg-white mt-5 px-5 pb-2.5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                     <div className="border-b border-opacity-30">
-                        <span className="text-sm text-black-2 font-bold mb-3 block">Nguyên vật liệu</span>
+                        <span className="text-sm text-black-2 font-bold mb-3 block">Sản phẩm</span>
                     </div>
                     <div className="flex flex-col gap-2 py-3">
                         <div className="flex flex-row justify-between gap-2 items-center">
-                            <InputDefault placeholder="Nhập SKU hoặc tên nguyên vật liệu" type="text" name=""
+                            <InputDefault placeholder="Nhập SKU hoặc tên sản phẩm" type="text" name=""
                                           onChange={handleChangeSearchInput}/>
                             <button className="appearance-none rounded px-4 py-1 btn-blue" type="button"
                                     onClick={() => setShowSearchProductModal(true)}>Tìm
@@ -196,8 +196,8 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 </thead>
                                 <tbody className="text-left">
                                 {
-                                    receiptDetails?.map((details: ExportMaterialReceiptDetail) => (
-                                        <tr key={details.material.id} className="text-xs border border-[#eee]">
+                                    receiptDetails?.map((details: ImportProductReceiptDetail) => (
+                                        <tr key={details.product.id} className="text-xs border border-[#eee]">
                                             <td className="px-2 py-3 dark:border-strokedark" >
                                                 <div className="flex flex-row gap-2">
                                                     <div>
@@ -206,9 +206,9 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                                className="rounded border border-opacity-30 aspect-square object-cover"/>
                                                     </div>
                                                     <div>
-                                                        <a href={`/materials/${details.material.id}`} target="_blank"
-                                                           className="font-bold text-sm text-blue-600 block mb-1">{details.material.name}</a>
-                                                        <div>SKU: {details.material.id}</div>
+                                                        <a href={`/products/${details.product.id}`} target="_blank"
+                                                           className="font-bold text-sm text-blue-600 block mb-1">{details.product.name}</a>
+                                                        <div>SKU: {details.product.id}</div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -219,7 +219,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                             </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                {details.material.unit}
+                                                {details.product.packing}
                                             </td>
 
 
@@ -302,7 +302,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/export-materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/import-products"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 
@@ -316,4 +316,4 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     );
 };
 
-export default ExportMaterialReceiptForm;
+export default ImportProductReceiptForm;

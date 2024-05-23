@@ -171,3 +171,42 @@ export interface ImportProductReceipt{
     created_at: Date;
     updated_at: Date;
 }
+export interface ImportMaterialReceiptDetail {
+    id: 1,
+    material_import_receipt_id: number,
+    material: Material,
+    quantity: number,
+    price: number,
+    created_at: Date,
+    updated_at: Date
+}
+export interface ImportProductReceiptDetail {
+    id: 1,
+    material_import_receipt_id: number,
+    product: Product,
+    quantity: number,
+    price: number,
+    created_at: Date,
+    updated_at: Date
+}
+
+export interface ExportMaterialReceiptDetail{
+    id: 1,
+    material_import_receipt_id: number,
+    material_id: number,
+    material: Material,
+    quantity: number,
+    created_at: Date,
+    updated_at: Date
+}
+export interface ExportProductReceiptDetail{
+    id: 1,
+    material_import_receipt_id: number,
+    material_id: number,
+    product: Product,
+    quantity: number,
+    created_at: Date,
+    updated_at: Date
+}
+
+

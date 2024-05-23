@@ -10,24 +10,18 @@ import Tooltip from "@/components/comon/Tooltip";
 import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
-import {
-    Product,
-    Material,
-    ImportMaterialReceiptDetail,
-    ExportMaterialReceipt,
-    ExportMaterialReceiptDetail
-} from "@/models/Model";
+import {Product, Material, ImportMaterialReceiptDetail, ImportMaterialReceipt} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
 
 interface Props {
-    receipt?: ExportMaterialReceipt;
-    receiptDetails?: ExportMaterialReceiptDetail[];
+    receipt?: ImportMaterialReceipt;
+    receiptDetails?: ImportMaterialReceiptDetail[];
 }
 
-const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
+const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", ""];
+    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", "Đơn giá", "Thành tiền", ""];
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -149,8 +143,8 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                         <SeachInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name=""/>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <Input label="Ngày xuất" feedback="Ngày xuất"
-                                   placeholder="Nhập ngày xuất"
+                            <Input label="Ngày nhập" feedback="Ngày nhập"
+                                   placeholder="Nhập ngày nhập"
                                    type="date" name="receipt_date"
                                    defaultValue={receipt?.receipt_date && new Date(receipt?.receipt_date).toISOString().split('T')[0]}/>
 
@@ -196,7 +190,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 </thead>
                                 <tbody className="text-left">
                                 {
-                                    receiptDetails?.map((details: ExportMaterialReceiptDetail) => (
+                                    receiptDetails?.map((details: ImportMaterialReceiptDetail) => (
                                         <tr key={details.material.id} className="text-xs border border-[#eee]">
                                             <td className="px-2 py-3 dark:border-strokedark" >
                                                 <div className="flex flex-row gap-2">
@@ -222,6 +216,22 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                 {details.material.unit}
                                             </td>
 
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
+                                                <h5 className="font-medium text-black dark:text-white">
+                                                    {new Intl.NumberFormat('vi-VN', {
+                                                        style: 'currency',
+                                                        currency: 'VND'
+                                                    }).format(details.price)}
+                                                </h5>
+                                            </td>
+                                            <td className="px-2 py-3 dark:border-strokedark text-end">
+                                                <h5 className="font-medium text-black dark:text-white">
+                                                    {new Intl.NumberFormat('vi-VN', {
+                                                        style: 'currency',
+                                                        currency: 'VND'
+                                                    }).format(details.price * details.quantity)}
+                                                </h5>
+                                            </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
                                                 <div className="flex items-center space-x-3.5 justify-center">
@@ -302,7 +312,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/export-materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/import-materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 
@@ -316,4 +326,4 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     );
 };
 
-export default ExportMaterialReceiptForm;
+export default ImportMaterialReceiptForm;
