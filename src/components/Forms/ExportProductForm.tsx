@@ -19,15 +19,22 @@ import {
 } from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
+import {getData} from "@/services/APIService";
+import {API_GET_ALL_PRODUCTS} from "@/config/api";
+import ContainerModal from "@/components/Modal/ContainerModal";
+import HeaderModal from "@/components/Modal/HeaderModal";
+import BodyModal from "@/components/Modal/BodyModal";
+import FooterModal from "@/components/Modal/FooterModal";
 
 interface Props {
     receipt?: ExportProductReceipt;
     receiptDetails?: ExportProductReceiptDetail[];
 }
+const modalColumns: string[] = ["Sản phẩm", "Khối lượng", "Quy cách đóng hàng", "Số lượng hiện có" ,"Trạng thái"];
 
 const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Sản phẩm", "Số lượng", "Đơn vị tính", ""];
+    const columns: string[] = ["Sản phẩm", "Số lượng", "Khối lượng", "Quy cách đóng hàng", ""];
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -38,6 +45,20 @@ const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const [searchInput, setSearchInput] = useState<string>('')
     const [searchInputInModal, setSearchInputInModal] = useState<string>('')
     const searchInputInModalRef = useRef<HTMLInputElement>(null);
+    const [productName, setProductName] = useState<string>("");
+    // Danh sách nguyên liệu tìm kiếm
+    const [productsInModal, setProductsInModal] = useState<Product[]>([])
+
+    // Danh sách nguyên liệu nhập
+    const [products, setProducts] = useState<Product[]>([])
+
+    const handleSearchMaterialByProductName = async () => {
+        if (productName !== '') {
+            const data: Product[] = await getData(API_GET_ALL_PRODUCTS + "?name=" + productName);
+            setProductsInModal(data)
+        }
+
+    }
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -128,6 +149,92 @@ const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     return (
         <Fragment>
             {
+                showSearchProductModal && (
+                    <ContainerModal>
+                        <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
+                        <BodyModal>
+                            <div className="grid grid-cols-12 gap-3">
+                                <div className="col-span-11">
+                                    <InputDefault placeholder="Nhập tên sản phẩm" ref={searchInputInModalRef}
+                                                  value={productName} type="text" name="search"
+                                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProductName(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={handleSearchMaterialByProductName}
+                                        className="bg-blue-500 hover:bg-blue-700 text-white w-full font-bold py-1 px-4 rounded">Tìm
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="pt-5">
+                                <div className="overflow-x-auto min-w-[900px]">
+                                    <table className="w-full table-auto">
+                                        <thead>
+                                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
+                                                <div className="flex justify-center">
+                                                    <input type="checkbox"/>
+                                                </div>
+                                            </th>
+                                            {
+                                                modalColumns.map((modalColumns: string, index: number) => (
+                                                    <th key={"columns-" + index}
+                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white  border-[#eee] border text-center">
+                                                        {modalColumns}
+                                                    </th>
+                                                ))
+                                            }
+                                        </tr>
+                                        </thead>
+                                        <tbody className="text-left">
+                                        {productsInModal.map((product: Product, key: number) => (
+                                            <tr key={key} className="text-xs border border-[#eee]">
+                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-x">
+                                                    <div className="flex justify-center">
+                                                        <input type="checkbox"/>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                                    <div className="flex flex-row gap-2">
+                                                        <div>
+                                                            <Image src={"/images/default/no-image.png"} alt=""
+                                                                   width={50}
+                                                                   height={50}
+                                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                                        </div>
+                                                        <div>
+                                                            <a href={`/products/${product.id}`} target="_blank"
+                                                               className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
+                                                            <div>ID: {product.id}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {product.weight} g
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {product.packing}
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {product.quantity}
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {product.status === "IN_STOCK" ? "Đang bán" : product.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Hết hàng"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </BodyModal>
+                        <FooterModal/>
+                    </ContainerModal>
+                )
+            }
+            {
                 insertSuccess && <SuccessModal title="Thành công" message="Thêm xuất kho thành phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
             }
             <form onSubmit={onSubmitMaterialForm}>
@@ -198,7 +305,7 @@ const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 {
                                     receiptDetails?.map((details: ExportProductReceiptDetail) => (
                                         <tr key={details.product.id} className="text-xs border border-[#eee]">
-                                            <td className="px-2 py-3 dark:border-strokedark" >
+                                            <td className="px-2 py-3 dark:border-strokedark">
                                                 <div className="flex flex-row gap-2">
                                                     <div>
                                                         <Image src={"/images/default/no-image.png"} alt="" width={50}
@@ -213,9 +320,13 @@ const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                 </div>
                                             </td>
 
-                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                 <input defaultValue={1} min={0} type="number"
                                                        className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                            </td>
+
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                {details.product.weight} g
                                             </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">

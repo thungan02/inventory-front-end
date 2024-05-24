@@ -28,7 +28,7 @@ const modalColumns: string[] = ["Nguyên vật liệu", "Khối lượng", "Đơ
 
 const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", "Đơn giá (đ)", "Thành tiền (đ)", ""];
+    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", "Khối lượng" ,"Đơn giá (đ)", "Thành tiền (đ)", ""];
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -207,7 +207,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                                    className="rounded border border-opacity-30 aspect-square object-cover"/>
                                                         </div>
                                                         <div>
-                                                            <a href={`/products/${material.id}`} target="_blank"
+                                                            <a href={`/materials/${material.id}`} target="_blank"
                                                                className="font-bold text-sm text-blue-600 block mb-1">{material.name}</a>
                                                             <div>ID: {material.id}</div>
                                                         </div>
@@ -215,7 +215,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                 </td>
 
                                                 <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {material.weight}
+                                                    {material.weight} kg
                                                 </td>
                                                 <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                     {material.unit}
@@ -305,7 +305,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 {
                                     receiptDetails?.map((details: ImportMaterialReceiptDetail) => (
                                         <tr key={details.material.id} className="text-xs border border-[#eee]">
-                                            <td className="px-2 py-3 dark:border-strokedark" >
+                                            <td className="px-2 py-3 dark:border-strokedark">
                                                 <div className="flex flex-row gap-2">
                                                     <div>
                                                         <Image src={"/images/default/no-image.png"} alt="" width={50}
@@ -330,6 +330,10 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                             </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                {details.material.weight} kg
+                                            </td>
+
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                 <h5 className="font-medium text-black dark:text-white">
                                                     {/*{new Intl.NumberFormat('vi-VN', {*/}
                                                     {/*    style: 'currency',*/}
@@ -341,7 +345,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                 </h5>
                                             </td>
                                             <td className="px-2 py-3 dark:border-strokedark text-end">
-                                            <h5 className="font-medium text-black dark:text-white">
+                                                <h5 className="font-medium text-black dark:text-white">
                                                     {new Intl.NumberFormat('vi-VN', {
                                                         style: 'currency',
                                                         currency: 'VND'

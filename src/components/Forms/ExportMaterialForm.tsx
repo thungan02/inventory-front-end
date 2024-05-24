@@ -12,19 +12,26 @@ import {useRouter} from "next/navigation";
 import Link from "next/link";
 import {
     ExportMaterialReceipt,
-    ExportMaterialReceiptDetail
+    ExportMaterialReceiptDetail, Material
 } from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
+import ContainerModal from "@/components/Modal/ContainerModal";
+import HeaderModal from "@/components/Modal/HeaderModal";
+import BodyModal from "@/components/Modal/BodyModal";
+import FooterModal from "@/components/Modal/FooterModal";
+import {getData} from "@/services/APIService";
+import {API_GET_ALL_MATERIALS} from "@/config/api";
 
 interface Props {
     receipt?: ExportMaterialReceipt;
     receiptDetails?: ExportMaterialReceiptDetail[];
 }
+const modalColumns: string[] = ["Nguyên vật liệu", "Khối lượng", "Đơn vị tính", "Trạng thái"];
 
 const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", ""];
+    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Khối lượng", "Đơn vị tính", ""];
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -35,6 +42,19 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     const [searchInput, setSearchInput] = useState<string>('')
     const [searchInputInModal, setSearchInputInModal] = useState<string>('')
     const searchInputInModalRef = useRef<HTMLInputElement>(null);
+    const [materialsInModal, setMaterialsInModal] = useState<Material[]>([]);
+    const [materialName, setMaterialName] = useState<string>("");
+
+    // Danh sách nguyên liệu xuất
+    const [materials, setMaterials] = useState<Material[]>([])
+
+    const handleSearchMaterialByProductName = async () => {
+        if (materialName !== '') {
+            const data: Material[] = await getData(API_GET_ALL_MATERIALS + "?name=" + materialName);
+            setMaterialsInModal(data)
+        }
+
+    }
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -125,6 +145,89 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     return (
         <Fragment>
             {
+                showSearchProductModal && (
+                    <ContainerModal>
+                        <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
+                        <BodyModal>
+                            <div className="grid grid-cols-12 gap-3">
+                                <div className="col-span-11">
+                                    <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef}
+                                                  value={materialName} type="text" name="search"
+                                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMaterialName(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={handleSearchMaterialByProductName}
+                                        className="bg-blue-500 hover:bg-blue-700 text-white w-full font-bold py-1 px-4 rounded">Tìm
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="pt-5">
+                                <div className="overflow-x-auto min-w-[900px]">
+                                    <table className="w-full table-auto">
+                                        <thead>
+                                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
+                                                <div className="flex justify-center">
+                                                    <input type="checkbox"/>
+                                                </div>
+                                            </th>
+                                            {
+                                                modalColumns.map((modalColumns: string, index: number) => (
+                                                    <th key={"columns-" + index}
+                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white  border-[#eee] border text-center">
+                                                        {modalColumns}
+                                                    </th>
+                                                ))
+                                            }
+                                        </tr>
+                                        </thead>
+                                        <tbody className="text-left">
+                                        {materialsInModal.map((material: Material, key: number) => (
+                                            <tr key={key} className="text-xs border border-[#eee]">
+                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-x">
+                                                    <div className="flex justify-center">
+                                                        <input type="checkbox"/>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                                    <div className="flex flex-row gap-2">
+                                                        <div>
+                                                            <Image src={"/images/default/no-image.png"} alt=""
+                                                                   width={50}
+                                                                   height={50}
+                                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                                        </div>
+                                                        <div>
+                                                            <a href={`/products/${material.id}`} target="_blank"
+                                                               className="font-bold text-sm text-blue-600 block mb-1">{material.name}</a>
+                                                            <div>ID: {material.id}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {material.weight}
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {material.unit}
+                                                </td>
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    {material.status === "IN_STOCK" ? "Đang bán" : material.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Hết hàng"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </BodyModal>
+                        <FooterModal/>
+                    </ContainerModal>
+                )
+            }
+            {
                 insertSuccess && <SuccessModal title="Thành công" message="Thêm nguyên vật liệu thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
             }
             <form onSubmit={onSubmitMaterialForm}>
@@ -195,7 +298,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 {
                                     receiptDetails?.map((details: ExportMaterialReceiptDetail) => (
                                         <tr key={details.material.id} className="text-xs border border-[#eee]">
-                                            <td className="px-2 py-3 dark:border-strokedark" >
+                                            <td className="px-2 py-3 dark:border-strokedark">
                                                 <div className="flex flex-row gap-2">
                                                     <div>
                                                         <Image src={"/images/default/no-image.png"} alt="" width={50}
@@ -210,9 +313,13 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                 </div>
                                             </td>
 
-                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                 <input defaultValue={1} min={0} type="number"
                                                        className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                            </td>
+
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                {details.material.weight} kg
                                             </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
