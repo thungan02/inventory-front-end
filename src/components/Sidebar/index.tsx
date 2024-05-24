@@ -14,7 +14,7 @@ import {
     BaggageClaim,
     Warehouse,
     Fence,
-    PackageSearch, LayoutGird
+    PackageSearch, LayoutGird, ContactEmloyee
 } from "@/components/Icons";
 import {List} from "postcss/lib/list";
 
@@ -44,21 +44,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             icon: <LayoutGird/>,
         },
         {
-            name: "Sản phẩm",
-            path: "products",
-            icon: <Tag/>,
-            sub: [
-                {
-                    name: "Tất cả sản phẩm",
-                    path: "products"
-                },
-                {
-                    name: "Danh mục",
-                    path: "categories"
-                }
-            ]
-        },
-        {
             name: "Đơn hàng",
             path: "orders",
             icon: <ShoppingCart/>,
@@ -71,6 +56,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     name: "Tạo đơn nháp",
                     path: "add"
                 },
+            ]
+        },
+        {
+            name: "Sản phẩm",
+            path: "products",
+            icon: <Tag/>,
+            sub: [
+                {
+                    name: "Tất cả sản phẩm",
+                    path: "products"
+                },
+                {
+                    name: "Danh mục",
+                    path: "categories"
+                }
             ]
         },
         {
@@ -121,14 +121,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             ]
         },
         {
-            name: "Khuyến mãi",
-            path: "discounts",
-            icon: <TickerPercent/>,
+            name: "Nhân viên",
+            path: "employee",
+            icon: <ContactEmloyee/>
         },
         {
             name: "Khách hàng",
             path: "customers",
             icon: <BookUser/>
+        },
+        {
+            name: "Khuyến mãi",
+            path: "discounts",
+            icon: <TickerPercent/>,
         },
         {
             name: "Kho",

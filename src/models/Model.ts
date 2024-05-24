@@ -172,7 +172,7 @@ export interface ImportProductReceipt{
     updated_at: Date;
 }
 export interface ImportMaterialReceiptDetail {
-    id: 1,
+    id: number,
     material_import_receipt_id: number,
     material: Material,
     quantity: number,
@@ -181,7 +181,7 @@ export interface ImportMaterialReceiptDetail {
     updated_at: Date
 }
 export interface ImportProductReceiptDetail {
-    id: 1,
+    id: number,
     material_import_receipt_id: number,
     product: Product,
     quantity: number,
@@ -191,7 +191,7 @@ export interface ImportProductReceiptDetail {
 }
 
 export interface ExportMaterialReceiptDetail{
-    id: 1,
+    id: number,
     material_import_receipt_id: number,
     material_id: number,
     material: Material,
@@ -200,7 +200,7 @@ export interface ExportMaterialReceiptDetail{
     updated_at: Date
 }
 export interface ExportProductReceiptDetail{
-    id: 1,
+    id: number,
     material_import_receipt_id: number,
     material_id: number,
     product: Product,
@@ -209,4 +209,42 @@ export interface ExportProductReceiptDetail{
     updated_at: Date
 }
 
+export interface Employee {
+    id: number,
+    name: string,
+    email: string,
+    email_verified_at: Date,
+    status: string,
+    birthday: Date;
+    gender: boolean;
+    address: string;
+    city: string;
+    district: string;
+    ward: string;
+    phone: string;
+    note: string;
+    profile: Profile;
+    role: Role;
+}
+
+export interface Role{
+    id: number,
+    name: string,
+    status: string;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface Profile{
+    id: number,
+    user_id: number,
+    first_name: string,
+    last_name: string,
+    phone: number,
+    birthday: Date,
+    avatar: String,
+    gender: boolean;
+    created_at: Date,
+    updated_at: Date
+}
 

@@ -9,6 +9,7 @@ import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import Image from "next/image";
 
 const statusOptions : Option[] = [
     {
@@ -58,13 +59,13 @@ const TableMaterials = () => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteProduct = (material: Material) => {
+    const handleClickDeleteMaterial = (material: Material) => {
         setMaterial(material);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_MATERIAL + '/' + materialToDeleted?.id)
+        await deleteData (API_DELETE_MATERIAL + '/' + material?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getMaterials(API_GET_ALL_MATERIALS);
@@ -95,7 +96,7 @@ const TableMaterials = () => {
         getMaterials(API_GET_ALL_MATERIALS)
     }, []);
 
-    const columns : string[] = ["ID", "Tên", "Khối lượng","Số lượng", "Trạng thái", "Ghi chú", "Thời gian cập nhật", ""];
+    const columns : string[] = ["Hình ảnh", "ID", "Tên", "Khối lượng","Số lượng", "Trạng thái", "Ghi chú", "Thời gian cập nhật", ""];
     return (
         <Fragment>
             {
@@ -156,6 +157,13 @@ const TableMaterials = () => {
                                         <input type="checkbox"/>
                                     </div>
                                 </td>
+                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                    <div className="flex justify-center">
+                                        <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                               height={50}
+                                               className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                    </div>
+                                </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p className="text-black dark:text-white text-center">
                                         {material.id}
@@ -209,7 +217,7 @@ const TableMaterials = () => {
                                         <Link href={`/materials/${material.id}`}
                                               className="hover:text-primary"><Eye/></Link>
                                         <button className="hover:text-primary" type="button"
-                                                onClick={() => handleClickDeleteProduct(material)}><Trash/></button>
+                                                onClick={() => handleClickDeleteMaterial(material)}><Trash/></button>
                                     </div>
                                 </td>
                             </tr>

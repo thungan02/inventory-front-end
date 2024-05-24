@@ -6,7 +6,8 @@ import {ImportMaterialReceipt} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
     API_DELETE_IMPORT_MATERIAL_RECEIPT,
-    API_IMPORT_MATERIAL_RECEIPTS, API_GET_ALL_IMPORT_MATERIAL_RECEIPT,
+    API_GET_ALL_IMPORT_MATERIAL_RECEIPT,
+    API_IMPORT_MATERIAL_RECEIPTS,
 } from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
@@ -38,6 +39,7 @@ const TableImportMaterial = () => {
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
+    const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
 
     const handleChangeStatusOption = (status: string) => {

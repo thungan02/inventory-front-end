@@ -1,15 +1,15 @@
 import React from 'react';
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import {EmployeeForm, DiscountForm} from "@/components/Forms";
+import {EmployeeForm} from "@/components/Forms";
 
-const CreateDiscountPage = () => {
+const CreateEmployeePage = () => {
     return (
         <DefaultLayout>
-            <Breadcrumb pageName="Thêm khuyến mãi"/>
-            <DiscountForm/>
+            <Breadcrumb pageName="Thêm nhân viên"/>
+            <EmployeeForm/>
         </DefaultLayout>
     );
 };
 
-export default CreateDiscountPage;
+export default CreateEmployeePage;

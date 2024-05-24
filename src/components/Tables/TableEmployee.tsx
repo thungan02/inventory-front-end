@@ -1,59 +1,86 @@
 "use client"
-import {Eye, Seach, Trash} from "@/components/Icons";
+import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
 import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {Discount} from "@/models/Model";
+import {Employee, Profile} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
-import {API_DELETE_DISCOUNT, API_GET_ALL_DISCOUNTS} from "@/config/api";
+import {
+    API_DELETE_CUSTOMER, API_DELETE_EMLOYEE,
+    API_GET_ALL_CUSTOMERS, API_GET_ALL_EMLOYEES,
+    API_GET_ALL_PRODUCTS,
+} from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
+import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
+import DropdownInput from "@/components/Inputs/DropdownInput";
 
-const statusOptions : Option[] = [
+
+const filteredOptions : Option[] = [
     {
-        key: "",
-        value: "Tất cả trạng thái"
+        key: "STOCKER",
+        value: "Thủ kho"
     },
     {
-        key: "ACTIVE",
-        value: "Đang hoạt động"
+        key: "ADMIN",
+        value: "Quản lý"
     },
     {
-        key: "TEMPORARILY_SUSPENDED",
-        value: "Tạm ngưng"
+        key: "SUPERADMIN",
+        value: "Giám đốc"
     },
+    {
+        key: "SALES",
+        value: "Nhân viên bán hàng"
+    },
+
 ]
 
-const TableDiscount = () => {
-    const [discounts, setDiscounts] = useState<Discount[]>([]);
-    const [discount, setDiscount] = useState<Discount>();
-    const [discountToDeleted, setDiscountToDeleted] = useState<Discount | null>(null);
+const TableEmployee = () => {
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [employee, setEmployee] = useState<Employee | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
+    const [emloyeeToDeleted, setEmloyeeToDeleted] = useState<Employee | null>(null);
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+    const [phoneFilter, setPhoneFilter] = useState<string>('');
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
     }
 
-    const handleClickDeleteDiscount = (discounts: Discount) => {
-        setDiscountToDeleted(discounts);
+    const handleChangeCategoryOption = (category: string) => {
+        setCategoryOptionSelected(category);
+    }
+
+    const handleChangeFilteredOption = (type: string) => {
+        setFilteredOptionSelected(type);
+    }
+
+    const handleClickDeleteEmployee = (emloyee: Employee) => {
+        setEmloyeeToDeleted(emloyee);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_DISCOUNT + '/' + discountToDeleted?.id)
+        await deleteData (API_DELETE_EMLOYEE + '/' + emloyeeToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
-        getDiscounts(API_GET_ALL_DISCOUNTS);
+        getEmloyees(API_GET_ALL_EMLOYEES);
     }
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setDiscountToDeleted(null);
+        setEmloyeeToDeleted(null);
     }
+
+    const getEmloyees = async (endpoint: string) => {
+        const newEmployees : Employee[] = await getData(endpoint);
+        setEmployees(newEmployees);
+    }
+
     const handleResetFilters = () => {
         setCategoryOptionSelected('');
         setStatusOptionSelected('');
@@ -62,34 +89,62 @@ const TableDiscount = () => {
     const handleSearch = () => {
         let params : string = '';
         if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+            params += 'role?.name=' + statusOptionSelected;
         }
-        getDiscounts(API_GET_ALL_DISCOUNTS + params);
+        getEmloyees(API_GET_ALL_EMLOYEES + params);
     }
-
-    const getDiscounts = async (endpoint: string) => {
-        const newDiscounts : Discount[] = await getData(endpoint);
-        setDiscounts(newDiscounts);
-    }
-
     useEffect(() => {
-        getDiscounts(API_GET_ALL_DISCOUNTS);
+        getEmloyees(API_GET_ALL_EMLOYEES)
     }, []);
 
-    const columns: string[] = ["ID", "Mã giảm giá", "Giảm giá", "Đơn hàng tối thiểu", "Giảm giá tối đa", "Ngày bắt đầu", "Ngày kết thúc", "Trạng thái", "Ghi chú", ""];
+    const getRoleStyles = (roles: string) => {
+        switch (roles) {
+            case "STOCKER":
+                return "bg-danger text-danger";
+            case "ADMIN":
+                return "bg-amber-500 text-amber-500";
+            case "SUPERADMIN":
+                return "bg-rose-500 text-rose-500";
+            case "SALES":
+                return "bg-primary text-primary";
+        }
+    };
+    const getRoleText = (roles: string) => {
+        switch (roles) {
+            case "STOCKER":
+                return "Thủ kho";
+            case "ADMIN":
+                return "Quản lý";
+            case "SALES":
+                return "Nhân viên bán hàng";
+            case "SUPERADMIN":
+                return "Giám đốc";
+        }
+
+    };
+
+    const columns : string[] = ["ID", "Tên", "Sinh nhật", "Giới tính", "Email", "Phân quyền", "Trạng thái", ""];
     return (
         <Fragment>
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa khuyến mãi`} message={`Bạn chắc chắn muốn xóa khuyến mãi ${discount?.coupon_code}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={() => setIsOpenDeleteModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhân viên thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+            }
+            {
+                isOpenDeleteModal && <DeleteModal title={`Xóa nhân viên`} message={`Bạn chắc chắn muốn xóa nhân viên ${emloyeeToDeleted?.id} - ${emloyeeToDeleted?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
 
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Trạng
-                        thái</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold">Phân quyền</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption}
+                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                    </div>
+
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Số
+                        điện thoại</label></div>
+                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                        <SelectDefault options={filteredOptions} id="searchStatus" onChange={handleSearch}
                                        selectedValue={statusOptionSelected}/>
                     </div>
 
@@ -122,7 +177,7 @@ const TableDiscount = () => {
                         </tr>
                         </thead>
                         <tbody className="text-left">
-                        {discounts.map((discount: Discount, key: number) => (
+                        {employees.map((employee: Employee, key: number) => (
                             <tr key={key} className="text-xs">
                                 <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-x">
                                     <div className="flex justify-center">
@@ -131,76 +186,59 @@ const TableDiscount = () => {
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p className="text-black dark:text-white text-center">
-                                        {discount.id}
+                                        {employee.id}
                                     </p>
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <h5 className="font-medium text-black dark:text-white">
-                                        {discount.coupon_code}
+                                        {employee.name}
+                                    </h5>
+                                    <p className="text-xs">{employee.profile?.phone ? employee.profile.phone : "Không rõ"}</p>
+                                </td>
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <h5 className="font-medium text-black dark:text-white">
+                                        {new Date(employee.profile?.birthday).toLocaleDateString()}
                                     </h5>
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <h5 className="font-medium text-black dark:text-white text-end">
-                                        {
-                                            discount.discount_unit === "%" ? `${discount.discount_value} %` : new Intl.NumberFormat('vi-VN', {
-                                                style: 'currency',
-                                                currency: 'VND'
-                                            }).format(discount.discount_value)
-                                        }
+                                    <h5 className="font-medium text-black dark:text-white">
+                                        {employee.profile?.gender ? "Nam" : "Nữ"}
                                     </h5>
                                 </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <h5 className="font-medium text-black dark:text-white text-end">
-                                        {new Intl.NumberFormat('vi-VN', {
-                                            style: 'currency',
-                                            currency: 'VND'
-                                        }).format(discount.minimum_order_value)}
-                                    </h5>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <h5 className="font-medium text-black dark:text-white text-end">
-                                        {new Intl.NumberFormat('vi-VN', {
-                                            style: 'currency',
-                                            currency: 'VND'
-                                        }).format(discount.maximum_discount_value)}
-                                    </h5>
-                                </td>
+
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p className="text-black dark:text-white">
-                                        {new Date(discount.valid_start).toLocaleDateString()}
+                                        {employee.email}
                                     </p>
                                 </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
-                                        {new Date(discount.valid_until).toLocaleDateString()}
-                                    </p>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-l">
                                     <p
-                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-xs font-medium ${
-                                            discount.status === "ACTIVE"
+                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium text-xs ${getRoleStyles(employee.role?.name)}`}
+                                    >
+                                        {
+                                            getRoleText(employee.role?.name)
+                                        }
+                                    </p>
+                                </td>
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-l">
+                                    <p
+                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium text-xs ${
+                                            employee.role?.status === "ACTIVE"
                                                 ? "bg-success text-success"
-                                                : discount.status === "TEMPORARILY_SUSPENDED"
+                                                : employee.role?.status === "DELETED"
                                                     ? "bg-danger text-danger"
                                                     : "bg-warning text-warning"
                                         }`}
                                     >
                                         {
-                                            discount.status === "ACTIVE" ? "Đang Hoạt động" : discount.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Không hoạt động"
+                                            employee.role?.status === "ACTIVE" ? "Đang hoạt động" : "Không hoạt động"
                                         }
                                     </p>
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <p className="text-black dark:text-white">
-                                        {discount.note}
-                                    </p>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <div className="flex items-center space-x-3.5">
-                                        <Link href={`/discounts/${discount.id}`}
-                                              className="hover:text-primary"><Eye/></Link>
+                                    <div className="flex items-center space-x-3.5 justify-center">
                                         <button className="hover:text-primary" type="button"
-                                                onClick={() => handleClickDeleteDiscount(discount)}><Trash/></button>
+                                                onClick={() => handleClickDeleteEmployee(employee)}><Trash/></button>
                                     </div>
                                 </td>
                             </tr>
@@ -233,4 +271,4 @@ const TableDiscount = () => {
     );
 };
 
-export default TableDiscount;
+export default TableEmployee;

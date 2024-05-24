@@ -11,9 +11,6 @@ import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
 import {
-    Product,
-    Material,
-    ImportMaterialReceiptDetail,
     ExportMaterialReceipt,
     ExportMaterialReceiptDetail
 } from "@/models/Model";

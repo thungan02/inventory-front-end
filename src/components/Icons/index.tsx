@@ -28,6 +28,7 @@ import CircleHelp from "@/components/Icons/CircleHelp";
 import Info from "@/components/Icons/Info";
 import TriangleAlert from "@/components/Icons/TriangleAlert";
 import Check from "@/components/Icons/Check";
+import ContactEmloyee from "@/components/Icons/ContactEmloyee";
 export {
     Clock,
     Google,
@@ -58,5 +59,6 @@ export {
     CircleHelp,
     Info,
     TriangleAlert,
-    Check
+    Check,
+    ContactEmloyee
 }

@@ -7,7 +7,7 @@ import {
     ExportMaterialReceiptDetail,
 } from "@/models/Model";
 import {getData} from "@/services/APIService";
-import ExportMaterialReceiptForm from "@/components/Forms/ExportMaterialForm";
+import ExportMaterialForm from "@/components/Forms/ExportMaterialForm";
 
 const EditExportMaterialReceiptPage = ({params} : {params: {id: string}}) => {
     const [receipt, setReceipt] = useState<ExportMaterialReceipt>();
@@ -30,7 +30,7 @@ const EditExportMaterialReceiptPage = ({params} : {params: {id: string}}) => {
     return (
         <DefaultLayout>
             <Breadcrumb pageName="Cập nhật xuất kho nguyên vật liệu"/>
-            <ExportMaterialReceiptForm receipt={receipt} receiptDetails={receiptDetails}/>
+            <ExportMaterialForm receipt={receipt} receiptDetails={receiptDetails}/>
         </DefaultLayout>
     );
 };
