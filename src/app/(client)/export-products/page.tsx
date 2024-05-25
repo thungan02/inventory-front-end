@@ -4,9 +4,11 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import FolderUp from "@/components/Icons/FolderUp";
 import Link from "next/link";
 import {CirclePlus} from "@/components/Icons";
+import TableImportMaterial from "@/components/Tables/TableImportMaterial";
+import TableImportProduct from "@/components/Tables/TableImportProduct";
 import TableExportProduct from "@/components/Tables/TableExportProduct";
 
-const ExportMaterialPage = () => {
+const ExportProductPage = () => {
     return (
         <DefaultLayout>
             <Breadcrumb pageName="Danh sách xuất kho thành phẩm">
@@ -26,4 +28,4 @@ const ExportMaterialPage = () => {
     );
 };
 
-export default ExportMaterialPage;
+export default ExportProductPage;

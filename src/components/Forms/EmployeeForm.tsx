@@ -3,25 +3,26 @@ import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import TextArea from "@/components/Inputs/TextArea";
-import Radio from "@/components/Inputs/Radio";
 import Alert from "@/components/Alert";
 import Link from "next/link";
-import {Customer, GroupCustomer} from "@/models/Model";
-import {useRouter} from "next/navigation";
-import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
+import {Employee, GroupCustomer} from "@/models/Model";
+import {usePathname, useRouter} from "next/navigation";
 import {getData} from "@/services/APIService";
+import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
 import {API_GET_ALL_DISTRICTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
 import SuccessModal from "@/components/Modal/SuccessModal";
+import Radio from "@/components/Inputs/Radio";
 
 interface Props {
-    customer?: Customer;
+    employee?: Employee;
 }
 
-const CustomerForm = ({customer}: Props) => {
+
+const ProviderForm = ({employee}: Props) => {
     const router = useRouter();
+    const pathname = usePathname();
     const inputProductImage = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string | null>(null);
-    const [groups, setGroups] = useState<GroupCustomer[]>();
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
@@ -30,31 +31,30 @@ const CustomerForm = ({customer}: Props) => {
     const [selectedWard, setSelectedWard] = useState<Ward>();
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
 
-
     useEffect(() => {
         const initialAddress = async () => {
-            if (customer) {
+            if (employee) {
                 const provinceResult: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
                 setProvinces(provinceResult.results);
 
-                const province = provinceResult.results.find(province => province.province_name === customer.city);
+                const province = provinceResult.results.find(province => province.province_name === employee.city);
                 setSelectedProvince(province);
 
                 const districtsResult: DistrictResponse = await getData(API_GET_ALL_DISTRICTS + '/' + province?.province_id);
                 setDistricts(districtsResult.results);
 
-                const district = districtsResult.results.find(district => district.district_name === customer.district);
+                const district = districtsResult.results.find(district => district.district_name === employee.district);
                 setSelectedDistrict(district);
 
                 const wardsResult: WardResponse = await getData(API_GET_ALL_WARDS + '/' + district?.district_id);
                 setWards(wardsResult.results);
 
-                const ward = wardsResult.results.find(ward => ward.ward_name === customer.ward);
+                const ward = wardsResult.results.find(ward => ward.ward_name === employee.ward);
                 setSelectedWard(ward);
             }
         }
         initialAddress();
-    }, [customer]);
+    }, [employee]);
 
 
     const handleChangeProvince = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -98,31 +98,19 @@ const CustomerForm = ({customer}: Props) => {
         const selected = wards.find(ward => ward.ward_id === selectedId);
         setSelectedWard(selected);
     }
-    const getAllGroupCustomers = async () => {
-        await fetch(`http://localhost:8000/api/v1/group_customers`)
-            .then(res => {
-                return res.json()
-            })
-            .then(data => {
-                setGroups(data);
-            })
-            .catch(err => {
-                console.log(err);
-            })
-    }
+
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
-    const onSubmitCustomerForm = async (event: FormEvent<HTMLFormElement>) => {
+    const onSubmitProviderForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const name: string = formData.get('name') as string;
-        const email: string = formData.get('email') as string;
         const phone: string = formData.get('phone') as string;
-        const address: string = formData.get('address') as string;
+        const email: string = formData.get('email') as string;
 
         if (name.trim() === '') {
-            setError('Tên khách hàng là bắt buộc');
+            setError('Mã giảm giá là bắt buộc');
             return;
         }
         if (phone.trim() === '') {
@@ -131,10 +119,6 @@ const CustomerForm = ({customer}: Props) => {
         }
         if (email.trim() === '') {
             setError('Email là bắt buộc');
-            return;
-        }
-        if (address.trim() === '') {
-            setError('Địa chỉ là bắt buộc');
             return;
         }
         if (selectedProvince) {
@@ -146,26 +130,23 @@ const CustomerForm = ({customer}: Props) => {
         if (selectedWard) {
             formData.set('ward', selectedWard.ward_name);
         }
-
         const data : Record<string, any> = Object.fromEntries(formData);
         if (data.gender === "1") {
             data.gender = 1;
         } else {
             data.gender = 0;
         }
-        data.status = "ACTICE";
-        data.group_customer_id = Number(data.group_customer_id);
-        console.log(data);
+        console.log(JSON.stringify(data));
 
-        const method = (customer ? "PUT" : "POST");
+        const method = (employee ? "PUT" : "POST");
 
-        const response = await fetch(`http://localhost:8000/api/v1/customers${customer ? "/" + customer.id : ''} `,
+        const response = await fetch(`http://localhost:8000/api/v1/users${employee?.id ? "/" + employee.id : ''}`,
             {
                 method: method,
                 body: JSON.stringify(data),
                 headers: {
                     'content-type': 'application/json'
-                }
+                },
             }
         );
 
@@ -175,6 +156,7 @@ const CustomerForm = ({customer}: Props) => {
         } else {
             console.log("that bai");
         }
+
     }
 
     useEffect(() => {
@@ -188,25 +170,23 @@ const CustomerForm = ({customer}: Props) => {
     }, [error]);
 
     useEffect(() => {
-        getAllGroupCustomers();
-    }, []);
-
-    useEffect(() => {
         const getAllProvinces = async () => {
-            const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
-            setProvinces(result.results);
-            console.log(result.results);
+            const provinceResult: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
+            setProvinces(provinceResult.results);
         }
 
         getAllProvinces();
     }, []);
-
     return (
         <Fragment>
             {
-                insertSuccess && <SuccessModal title="Thành công" message="Thêm khách hàng thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                insertSuccess && (
+                    pathname.toString().includes('new') ?
+                        <SuccessModal title="Thành công" message="Thêm nhà cung cấp thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/> :
+                        <SuccessModal title="Thành công" message="Cập nhật nhà cung cấp thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
+                )
             }
-            <form onSubmit={onSubmitCustomerForm}>
+            <form onSubmit={onSubmitProviderForm}>
                 {
                     error && <Alert message={error} type="error"/>
                 }
@@ -217,95 +197,56 @@ const CustomerForm = ({customer}: Props) => {
                     </div>
 
                     <div className="py-2">
-                        <Input label="Tên khách hàng" feedback="Tên khách hàng là bắt buộc"
-                               placeholder="Nhập tên khách hàng"
-                               defaultValue={customer?.name}
+                        <Input label="Tên nhân viên" feedback="Tên nhân viên là bắt buộc"
+                               placeholder="Nhập tên nhân viên"
+                               defaultValue={employee?.name}
                                type="text" name="name"/>
-
-                        <Input label="Sinh nhật" feedback="Sinh nhật"
-                               placeholder="Nhập sinh nhật"
-                               type="date" name="birthday"
-                               defaultValue={customer?.birthday && new Date(customer.birthday).toISOString().split('T')[0]}/>
-
-                        <Input label="Email" feedback="Email là bắt buộc"
-                               placeholder="Nhập email"
-                               defaultValue={customer?.email}
-                               type="email"
-                               name="email"/>
 
                         <div className="grid grid-cols-2 gap-3">
                             <Input label="Số điện thoại" feedback="Số điện thoại là bắt buộc"
-                                   placeholder="Nhập Số điện thoại"
-                                   defaultValue={customer?.phone}
-                                   type="text"
-                                   name="phone"/>
-
-                            <Select label="Nhóm khách hàng" name="group_customer_id"
-                                    defaultValue="Khách hàng thân thiết">
-                                {
-                                    groups?.map((group: GroupCustomer) => (
-                                        <option key={group.id} value={group.id}>{group.name}</option>
-                                    ))
-                                }
-                            </Select>
+                                   placeholder="Nhập số điện thoại"
+                                   defaultValue={employee?.phone}
+                                   type="text" name="phone"/>
+                            <Input label="Email" feedback="Email là bắt buộc"
+                                   placeholder="Nhập email"
+                                   defaultValue={employee?.email}
+                                   type="text" name="email"/>
                         </div>
-                        <Input label="Địa chỉ" feedback="Địa chỉ là bắt buộc"
-                               placeholder="Nhập địa chỉ cụ thể"
-                               type="text"
-                               defaultValue={customer?.address}
-                               name="address"/>
 
-                        <div className="grid grid-cols-3 gap-3">
-                            <Select label="Thành phố/Tỉnh" name="city" value={selectedProvince?.province_id || ''} onChange={handleChangeProvince}>
-                                <option value="">Chọn thành phố/tỉnh</option>
-                                {
-                                    provinces.map((province: Province) => (
-                                        <option key={province.province_id}
-                                                value={province.province_id}>{province.province_name}</option>
-                                    ))
-                                }
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input label="Sinh nhật" feedback="Sinh nhật"
+                                   placeholder="Nhập sinh nhật"
+                                   type="date" name="birthday"
+                                   defaultValue={employee?.birthday && new Date(employee.birthday).toISOString().split('T')[0]}/>
+                            <Select label="Phân quyền" name="roles" defaultValue="STOCKER">
+                                <option value="STOCKER">Thủ kho</option>
+                                <option value="SALES">Nhân viên bán hàng</option>
+                                <option value="SUPERADMIN">Giám đốc</option>
+                                <option value="ADMIN">Quản lý</option>
                             </Select>
 
-                            <Select label="Quận/Huyện" name="district" value={selectedDistrict?.district_id || ''} onChange={handleChangeDistrict}>
-                                <option value="">Chọn quận/huyện</option>
-                                {
-                                    districts.map((district: District) => (
-                                        <option key={district.district_id}
-                                                value={district.district_id}>{district.district_name}</option>
-                                    ))
-                                }
-                            </Select>
-
-                            <Select label="Phường/xã" name="ward" value={selectedWard?.ward_id || ''} onChange={handleChangeWard}>
-                                <option value="">Chọn xã/phường</option>
-                                {
-                                    wards.map((ward: Ward) => (
-                                        <option key={ward.ward_id} value={ward.ward_id}>{ward.ward_name}</option>
-                                    ))
-                                }
-                            </Select>
                         </div>
                         <div>
                             <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Giới tính</div>
                             <Radio label="Nam" name="gender" value={1}
-                                   defaultChecked={customer ? Boolean(customer?.gender) : true}/>
+                                   defaultChecked={employee ? Boolean(employee?.gender) : true}/>
                             <Radio label="Nữ" name="gender" value={0}
-                                   defaultChecked={customer ? !Boolean(customer?.gender) : false}/>
+                                   defaultChecked={employee ? !Boolean(employee?.gender) : false}/>
                         </div>
 
                         <div>
                             <TextArea label="Ghi chú" placeholder="Nhập ghi chú" name="note" feedback=""
-                                      defaultValue={customer?.note}/>
+                                      defaultValue={employee?.note}/>
                         </div>
                     </div>
                 </div>
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/customers"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/providers"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 
                     <button type="submit" className="btn btn-blue text-sm inline-flex items-center gap-2">
-                        <span className="hidden xl:block">{customer ? "Cập nhật" : "Lưu"}</span>
+                        <span className="hidden xl:block">{employee ? "Cập nhật" : "Lưu"}</span>
                     </button>
                 </div>
             </form>
@@ -313,4 +254,4 @@ const CustomerForm = ({customer}: Props) => {
     );
 };
 
-export default CustomerForm;
+export default ProviderForm;

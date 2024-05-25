@@ -50,11 +50,6 @@ const TableCustomer = () => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteProduct = (customer: Customer) => {
-        setCustomerToDeleted(customer);
-        setIsOpenDeleteModal(true);
-    }
-
     const handleDelete = async () => {
         await deleteData (API_DELETE_CUSTOMER + '/' + customerToDeleted?.id)
         setIsOpenDeleteModal(false);
@@ -100,7 +95,7 @@ const TableCustomer = () => {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa khách hàng thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa khách hàng`} message={`Bạn chắc chắn muốn xóa khách hàng ${customer?.id} - ${customer?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa khách hàng`} message={`Bạn chắc chắn muốn xóa khách hàng ${customerToDeleted?.id} - ${customerToDeleted?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -139,7 +134,7 @@ const TableCustomer = () => {
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border border-[#eee] text-center">
+                                        className="min-w-[50px] px-2 py-2 font-bold text-black dark:text-white border border-[#eee] text-center">
                                         {column}
                                     </th>
                                 ))

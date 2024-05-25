@@ -10,28 +10,25 @@ import Tooltip from "@/components/comon/Tooltip";
 import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
-import {
-    ExportMaterialReceipt,
-    ExportMaterialReceiptDetail, Material
-} from "@/models/Model";
+import {Product, Material, ImportMaterialReceiptDetail, ImportMaterialReceipt} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
+import {getData} from "@/services/APIService";
+import {API_GET_ALL_MATERIALS} from "@/config/api";
 import ContainerModal from "@/components/Modal/ContainerModal";
 import HeaderModal from "@/components/Modal/HeaderModal";
 import BodyModal from "@/components/Modal/BodyModal";
 import FooterModal from "@/components/Modal/FooterModal";
-import {getData} from "@/services/APIService";
-import {API_GET_ALL_MATERIALS} from "@/config/api";
 
 interface Props {
-    receipt?: ExportMaterialReceipt;
-    receiptDetails?: ExportMaterialReceiptDetail[];
+    receipt?: ImportMaterialReceipt;
+    receiptDetails?: ImportMaterialReceiptDetail[];
 }
 const modalColumns: string[] = ["Nguyên vật liệu", "Khối lượng", "Đơn vị tính", "Trạng thái"];
 
-const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
+const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Khối lượng", "Đơn vị tính", ""];
+    const columns: string[] = ["Nguyên vật liệu", "Số lượng", "Đơn vị tính", "Khối lượng" ,"Đơn giá (đ)", "Thành tiền (đ)", ""];
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const inputProductImage = useRef<HTMLInputElement | null>(null);
     const [images, setImages] = useState<string[]>([]);
@@ -42,10 +39,11 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     const [searchInput, setSearchInput] = useState<string>('')
     const [searchInputInModal, setSearchInputInModal] = useState<string>('')
     const searchInputInModalRef = useRef<HTMLInputElement>(null);
-    const [materialsInModal, setMaterialsInModal] = useState<Material[]>([]);
     const [materialName, setMaterialName] = useState<string>("");
+    // Danh sách nguyên liệu tìm kiếm
+    const [materialsInModal, setMaterialsInModal] = useState<Material[]>([])
 
-    // Danh sách nguyên liệu xuất
+    // Danh sách nguyên liệu nhập
     const [materials, setMaterials] = useState<Material[]>([])
 
     const handleSearchMaterialByProductName = async () => {
@@ -55,6 +53,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
         }
 
     }
+
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -142,6 +141,14 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
         }
     }, [error]);
 
+    useEffect(() => {
+        const getExampleMaterials = async () => {
+            const data : Material[] = await getData(API_GET_ALL_MATERIALS);
+            setMaterials(data);
+        }
+
+    }, []);
+
     return (
         <Fragment>
             {
@@ -200,7 +207,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                                    className="rounded border border-opacity-30 aspect-square object-cover"/>
                                                         </div>
                                                         <div>
-                                                            <a href={`/products/${material.id}`} target="_blank"
+                                                            <a href={`/materials/${material.id}`} target="_blank"
                                                                className="font-bold text-sm text-blue-600 block mb-1">{material.name}</a>
                                                             <div>ID: {material.id}</div>
                                                         </div>
@@ -208,7 +215,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                 </td>
 
                                                 <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {material.weight}
+                                                    {material.weight} kg
                                                 </td>
                                                 <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                     {material.unit}
@@ -246,11 +253,11 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                defaultValue={receipt?.id}
                                type="text" name=""/>
 
-                        <SeachInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name=""/>
+                        <SeachInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name="provider"/>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <Input label="Ngày xuất" feedback="Ngày xuất"
-                                   placeholder="Nhập ngày xuất"
+                            <Input label="Ngày nhập" feedback="Ngày nhập"
+                                   placeholder="Nhập ngày nhập"
                                    type="date" name="receipt_date"
                                    defaultValue={receipt?.receipt_date && new Date(receipt?.receipt_date).toISOString().split('T')[0]}/>
 
@@ -296,7 +303,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 </thead>
                                 <tbody className="text-left">
                                 {
-                                    receiptDetails?.map((details: ExportMaterialReceiptDetail) => (
+                                    receiptDetails?.map((details: ImportMaterialReceiptDetail) => (
                                         <tr key={details.material.id} className="text-xs border border-[#eee]">
                                             <td className="px-2 py-3 dark:border-strokedark">
                                                 <div className="flex flex-row gap-2">
@@ -319,13 +326,32 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                             </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                {details.material.unit}
+                                            </td>
+
+                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                 {details.material.weight} kg
                                             </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                {details.material.unit}
-                                            </td>
+                                                <h5 className="font-medium text-black dark:text-white">
+                                                    {/*{new Intl.NumberFormat('vi-VN', {*/}
+                                                    {/*    style: 'currency',*/}
+                                                    {/*    currency: 'VND'*/}
+                                                    {/*}).format(details.price)}*/}
 
+                                                    <input defaultValue={1} min={0} type="number"
+                                                           className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                                </h5>
+                                            </td>
+                                            <td className="px-2 py-3 dark:border-strokedark text-end">
+                                                <h5 className="font-medium text-black dark:text-white">
+                                                    {new Intl.NumberFormat('vi-VN', {
+                                                        style: 'currency',
+                                                        currency: 'VND'
+                                                    }).format(details.price * details.quantity)}
+                                                </h5>
+                                            </td>
 
                                             <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
                                                 <div className="flex items-center space-x-3.5 justify-center">
@@ -406,7 +432,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/export-materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/import-materialsInModal"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 
@@ -420,4 +446,4 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
     );
 };
 
-export default ExportMaterialReceiptForm;
+export default ImportMaterialReceiptForm;

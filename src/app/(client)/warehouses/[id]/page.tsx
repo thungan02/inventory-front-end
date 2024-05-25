@@ -26,7 +26,7 @@ const EditWarehousePage = ({params} : {params: {id: string}}) => {
     }, []);
     return (
         <DefaultLayout>
-            <Breadcrumb pageName="Cập nhật nhà cung cấp"/>
+            <Breadcrumb pageName="Cập nhật nhà kho"/>
             <WarehouseForm warehouse={warehouse}/>
         </DefaultLayout>
     );
