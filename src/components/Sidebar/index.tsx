@@ -17,6 +17,7 @@ import {
     PackageSearch, LayoutGird, ContactEmloyee
 } from "@/components/Icons";
 import {List} from "postcss/lib/list";
+import SquareGanttChart from "@/components/Icons/SquareGanttChart";
 
 
 interface SidebarProps {
@@ -77,20 +78,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             name: "Nguyên vật liệu",
             path: "materials",
             icon: <PackageSearch/>,
-            sub: [
-                {
-                    name: "Tất cả nguyên vật liệu",
-                    path: "materials"
-                },
-                {
-                    name: "Thêm NVL",
-                    path: "add"
-                },
-                {
-                    name: "Cập nhật NVL",
-                    path: "update"
-                },
-            ]
         },
         {
             name: "Nhà cung cấp",
@@ -98,7 +85,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             icon: <BaggageClaim/>,
         },
         {
-            name: "Tồn kho",
+            name: "Xuất - Nhập kho",
             path: "inventory",
             icon: <Fence/>,
             sub: [
@@ -119,6 +106,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     path: "export-products"
                 },
             ]
+        },
+        {
+            name: "Tồn kho",
+            path: "",
+            icon: <SquareGanttChart/>
         },
         {
             name: "Nhân viên",

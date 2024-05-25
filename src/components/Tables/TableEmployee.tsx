@@ -5,9 +5,9 @@ import Link from "next/link";
 import {Employee, Profile} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
-    API_DELETE_CUSTOMER, API_DELETE_EMLOYEE,
-    API_GET_ALL_CUSTOMERS, API_GET_ALL_EMLOYEES,
-    API_GET_ALL_PRODUCTS,
+     API_DELETE_EMPLOYEE,
+   API_GET_ALL_EMPLOYEES,
+
 } from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
@@ -41,7 +41,7 @@ const TableEmployee = () => {
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
-    const [emloyeeToDeleted, setEmloyeeToDeleted] = useState<Employee | null>(null);
+    const [employeeToDeleted, setEmployeeToDeleted] = useState<Employee | null>(null);
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
@@ -59,24 +59,24 @@ const TableEmployee = () => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteEmployee = (emloyee: Employee) => {
-        setEmloyeeToDeleted(emloyee);
+    const handleClickDeleteEmployee = (employee: Employee) => {
+        setEmployeeToDeleted(employee);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_EMLOYEE + '/' + emloyeeToDeleted?.id)
+        await deleteData (API_DELETE_EMPLOYEE + '/' + employeeToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
-        getEmloyees(API_GET_ALL_EMLOYEES);
+        getEmlpoyees(API_GET_ALL_EMPLOYEES);
     }
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setEmloyeeToDeleted(null);
+        setEmployeeToDeleted(null);
     }
 
-    const getEmloyees = async (endpoint: string) => {
+    const getEmlpoyees = async (endpoint: string) => {
         const newEmployees : Employee[] = await getData(endpoint);
         setEmployees(newEmployees);
     }
@@ -91,10 +91,10 @@ const TableEmployee = () => {
         if (statusOptionSelected !== '') {
             params += 'role?.name=' + statusOptionSelected;
         }
-        getEmloyees(API_GET_ALL_EMLOYEES + params);
+        getEmlpoyees(API_GET_ALL_EMPLOYEES + params);
     }
     useEffect(() => {
-        getEmloyees(API_GET_ALL_EMLOYEES)
+        getEmlpoyees(API_GET_ALL_EMPLOYEES)
     }, []);
 
     const getRoleStyles = (roles: string) => {
@@ -130,7 +130,7 @@ const TableEmployee = () => {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhân viên thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nhân viên`} message={`Bạn chắc chắn muốn xóa nhân viên ${emloyeeToDeleted?.id} - ${emloyeeToDeleted?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa nhân viên`} message={`Bạn chắc chắn muốn xóa nhân viên ${employeeToDeleted?.id} - ${employeeToDeleted?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -169,7 +169,7 @@ const TableEmployee = () => {
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border border-[#eee] text-center">
+                                        className="min-w-[50px] px-2 py-2 font-bold text-black dark:text-white border border-[#eee] text-center">
                                         {column}
                                     </th>
                                 ))

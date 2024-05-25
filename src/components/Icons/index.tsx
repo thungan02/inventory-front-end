@@ -29,6 +29,7 @@ import Info from "@/components/Icons/Info";
 import TriangleAlert from "@/components/Icons/TriangleAlert";
 import Check from "@/components/Icons/Check";
 import ContactEmloyee from "@/components/Icons/ContactEmloyee";
+import SquareGanttChart from "@/components/Icons/SquareGanttChart";
 export {
     Clock,
     Google,
@@ -60,5 +61,6 @@ export {
     Info,
     TriangleAlert,
     Check,
-    ContactEmloyee
+    ContactEmloyee,
+    SquareGanttChart
 }

@@ -34,5 +34,5 @@ export const API_IMPORT_PRODUCT_RECEIPTS = API_BASE_URL + '/api/v1/product_impor
 export const API_GET_ALL_IMPORT_PRODUCT_RECEIPT = API_BASE_URL + '/api/v1/product_import_receipts';
 export const API_DELETE_IMPORT_PRODUCT_RECEIPT = API_BASE_URL + '/api/v1/product_import_receipts'
 
-export const API_DELETE_EMLOYEE = API_BASE_URL + '/api/v1/users'
-export const API_GET_ALL_EMLOYEES = API_BASE_URL + '/api/v1/users'
+export const API_DELETE_EMPLOYEE = API_BASE_URL + '/api/v1/users'
+export const API_GET_ALL_EMPLOYEES = API_BASE_URL + '/api/v1/users'

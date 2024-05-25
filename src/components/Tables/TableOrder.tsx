@@ -177,7 +177,7 @@ const TableOrder = () => {
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="border border-[#eee] min-w-[50px] px-2 py-2 font-medium text-black dark:text-white text-center">
+                                        className="border border-[#eee] min-w-[50px] px-2 py-2 font-bold text-black dark:text-white text-center">
                                         {column}
                                     </th>
                                 ))
