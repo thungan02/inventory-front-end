@@ -13,7 +13,7 @@ import {Trash} from "@/components/Icons";
 import Image from "next/image";
 import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
 import {getData} from "@/services/APIService";
-import {API_GET_ALL_DISTRICTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
+import {API_GET_ALL_DISTRICTS, API_GET_ALL_PRODUCTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import ContainerModal from "@/components/Modal/ContainerModal";
 import HeaderModal from "@/components/Modal/HeaderModal";
@@ -65,9 +65,10 @@ let productsExample: Product[] = [
         updated_at: new Date("2024-05-15T22:33:25.000000Z")
     },
 ];
+const modalColumns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng", "Sẵn có", "Giá (đ)", "Thành tiền (đ)"];
+const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng", "Sẵn có", "Giá (đ)", "Thành tiền (đ)", ""];
 
 const OrderForm = ({order}: Props) => {
-    const columns: string[] = ["Sản phẩm", "", "Quy cách đóng gói", "Số lượng", "Sẵn có", "Giá (đ)", "Thành tiền (đ)", ""];
     const router = useRouter();
     const pathname = usePathname();
     const inputProductImage = useRef<HTMLInputElement>(null);
@@ -82,6 +83,20 @@ const OrderForm = ({order}: Props) => {
     const [searchInput, setSearchInput] = useState<string>('')
     const [searchInputInModal, setSearchInputInModal] = useState<string>('')
     const searchInputInModalRef = useRef<HTMLInputElement>(null);
+
+    // Modal products
+    const [productName, setProductName] = useState<string>("");
+    const [products, setProducts] = useState<Product[]>([])
+
+    const handleSearchProductByProductName = async () => {
+        if (productName !== '') {
+            const data: Product[] = await getData(API_GET_ALL_PRODUCTS + "?name=" + productName);
+            setProducts(data)
+        }
+
+    }
+
+
     useEffect(() => {
         const initialAddress = async () => {
             if (order) {
@@ -231,92 +246,6 @@ const OrderForm = ({order}: Props) => {
         getAllProvinces();
     }, []);
 
-    const SearchProductModal = () => {
-        if (showSearchProductModal) {
-            return (
-                <ContainerModal>
-                    <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
-                    <BodyModal>
-                        <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef} value={searchInputInModal} type="text" name="search" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInputInModal(e.target.value)}/>
-                        <div className="pt-5">
-                            <div className="overflow-x-auto min-w-[900px]">
-                                <table className="w-full table-auto">
-                                    <thead>
-                                    <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
-                                        {
-                                            columns.map((column: string, index: number) => (
-                                                <th key={"columns-" + index}
-                                                    className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
-                                                    {column}
-                                                </th>
-                                            ))
-                                        }
-                                    </tr>
-                                    </thead>
-                                    <tbody className="text-left">
-                                    {productsExample.map((product: Product, key: number) => (
-                                        <tr key={key} className="text-xs border-b border-[#eee]">
-                                            <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
-                                                <div className="flex flex-row gap-2">
-                                                    <div>
-                                                        <Image src={"/images/default/no-image.png"} alt="" width={50}
-                                                               height={50}
-                                                               className="rounded border border-opacity-30 aspect-square object-cover"/>
-                                                    </div>
-                                                    <div>
-                                                        <a href={`/products/${product.id}`} target="_blank"
-                                                           className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
-                                                        <div>SKU: {product.sku}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                {product.packing}
-                                            </td>
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                <input defaultValue={1} min={0} type="number"
-                                                       className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
-                                            </td>
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                {product.quantity}
-                                            </td>
-
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                <h5 className="font-medium text-black dark:text-white">
-                                                    {new Intl.NumberFormat('vi-VN', {
-                                                        style: 'currency',
-                                                        currency: 'VND'
-                                                    }).format(product.price)}
-                                                </h5>
-                                            </td>
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                <h5 className="font-medium text-black dark:text-white">
-                                                    {new Intl.NumberFormat('vi-VN', {
-                                                        style: 'currency',
-                                                        currency: 'VND'
-                                                    }).format(product.price)}
-                                                </h5>
-                                            </td>
-
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                <div className="flex items-center space-x-3.5">
-                                                    <button className="hover:text-primary" type="button"><Trash/>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </BodyModal>
-                    <FooterModal/>
-                </ContainerModal>
-            )
-        }
-    }
-
     return (
         <Fragment>
             {
@@ -324,29 +253,53 @@ const OrderForm = ({order}: Props) => {
                     <ContainerModal>
                         <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
                         <BodyModal>
-                            <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef} value={searchInputInModal} type="text" name="search" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInputInModal(e.target.value)}/>
+                            <div className="grid grid-cols-12 gap-3">
+                                <div className="col-span-11">
+                                    <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef}
+                                                  value={productName} type="text" name="search"
+                                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProductName(e.target.value)}
+                                                  />
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={handleSearchProductByProductName}
+                                        className="bg-blue-500 hover:bg-blue-700 text-white w-full font-bold py-1 px-4 rounded">Tìm
+                                    </button>
+                                </div>
+                            </div>
                             <div className="pt-5">
-                                <div className="overflow-x-auto min-w-[900px]">
+                            <div className="overflow-x-auto min-w-[900px]">
                                     <table className="w-full table-auto">
                                         <thead>
                                         <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
+                                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
+                                                <div className="flex justify-center">
+                                                    <input type="checkbox"/>
+                                                </div>
+                                            </th>
                                             {
-                                                columns.map((column: string, index: number) => (
+                                                modalColumns.map((modalColumns: string, index: number) => (
                                                     <th key={"columns-" + index}
-                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
-                                                        {column}
+                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white  border-[#eee] border text-center">
+                                                        {modalColumns}
                                                     </th>
                                                 ))
                                             }
                                         </tr>
                                         </thead>
                                         <tbody className="text-left">
-                                        {productsExample.map((product: Product, key: number) => (
-                                            <tr key={key} className="text-xs border-b border-[#eee]">
-                                                <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
+                                        {products.map((product: Product, key: number) => (
+                                            <tr key={key} className="text-xs border border-[#eee]">
+                                            <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-x">
+                                                    <div className="flex justify-center">
+                                                        <input type="checkbox"/>
+                                                    </div>
+                                                </td>
+                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                                     <div className="flex flex-row gap-2">
                                                         <div>
-                                                            <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                                            <Image src={"/images/default/no-image.png"} alt=""
+                                                                   width={50}
                                                                    height={50}
                                                                    className="rounded border border-opacity-30 aspect-square object-cover"/>
                                                         </div>
@@ -357,27 +310,27 @@ const OrderForm = ({order}: Props) => {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                     {product.packing}
                                                 </td>
-                                                <td className="px-2 py-3 dark:border-strokedark">
-                                                    <input defaultValue={1} min={0} type="number"
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                                    <input defaultValue={1} min={1} max={product.quantity} type="number"
                                                            className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
                                                 </td>
-                                                <td className="px-2 py-3 dark:border-strokedark">
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                                     {product.quantity}
                                                 </td>
 
-                                                <td className="px-2 py-3 dark:border-strokedark">
-                                                    <h5 className="font-medium text-black dark:text-white">
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
+                                                    <h5 className="font-medium text-black dark:text-white text-end">
                                                         {new Intl.NumberFormat('vi-VN', {
                                                             style: 'currency',
                                                             currency: 'VND'
                                                         }).format(product.price)}
                                                     </h5>
                                                 </td>
-                                                <td className="px-2 py-3 dark:border-strokedark">
-                                                    <h5 className="font-medium text-black dark:text-white">
+                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
+                                                    <h5 className="font-medium text-black dark:text-white text-end">
                                                         {new Intl.NumberFormat('vi-VN', {
                                                             style: 'currency',
                                                             currency: 'VND'
@@ -385,17 +338,11 @@ const OrderForm = ({order}: Props) => {
                                                     </h5>
                                                 </td>
 
-                                                <td className="px-2 py-3 dark:border-strokedark">
-                                                    <div className="flex items-center space-x-3.5">
-                                                        <button className="hover:text-primary" type="button"><Trash/>
-                                                        </button>
-                                                    </div>
-                                                </td>
                                             </tr>
                                         ))}
                                         </tbody>
                                     </table>
-                                </div>
+                            </div>
                             </div>
                         </BodyModal>
                         <FooterModal/>
@@ -512,7 +459,7 @@ const OrderForm = ({order}: Props) => {
                                     {
                                         columns.map((column: string, index: number) => (
                                             <th key={"columns-" + index}
-                                                className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white">
+                                                className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border border-[#eee] text-center">
                                                 {column}
                                             </th>
                                         ))
@@ -522,12 +469,12 @@ const OrderForm = ({order}: Props) => {
                                 <tbody className="text-left">
                                 {productsExample.map((product: Product, key: number) => (
                                     <tr key={key} className="text-xs border-b border-[#eee]">
-                                        <td className="px-2 py-3 dark:border-strokedark" colSpan={2}>
-                                            <div className="flex flex-row gap-2">
+                                        <td className="px-2 py-3 dark:border-strokedark border-[#eee] border">
+                                            <div className="flex flex-row gap-2 ">
                                                 <div>
                                                     <Image src={"/images/default/no-image.png"} alt="" width={50}
                                                            height={50}
-                                                           className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                                           className="rounded border border-opacity-30 aspect-square object-cover border-[#eee]"/>
                                                 </div>
                                                 <div>
                                                     <a href={`/products/${product.id}`} target="_blank"
@@ -536,18 +483,18 @@ const OrderForm = ({order}: Props) => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-2 py-3 dark:border-strokedark">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             {product.packing}
                                         </td>
-                                        <td className="px-2 py-3 dark:border-strokedark">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             <input defaultValue={1} min={0} type="number"
                                                    className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
                                         </td>
-                                        <td className="px-2 py-3 dark:border-strokedark">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             {product.quantity}
                                         </td>
 
-                                        <td className="px-2 py-3 dark:border-strokedark">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             <h5 className="font-medium text-black dark:text-white">
                                                 {new Intl.NumberFormat('vi-VN', {
                                                     style: 'currency',
@@ -555,7 +502,7 @@ const OrderForm = ({order}: Props) => {
                                                 }).format(product.price)}
                                             </h5>
                                         </td>
-                                        <td className="px-2 py-3 dark:border-strokedark">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             <h5 className="font-medium text-black dark:text-white">
                                                 {new Intl.NumberFormat('vi-VN', {
                                                     style: 'currency',
@@ -564,8 +511,8 @@ const OrderForm = ({order}: Props) => {
                                             </h5>
                                         </td>
 
-                                        <td className="px-2 py-3 dark:border-strokedark">
-                                            <div className="flex items-center space-x-3.5">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                            <div className="flex items-center space-x-3.5 justify-center">
                                                 <button className="hover:text-primary" type="button"><Trash/></button>
                                             </div>
                                         </td>
@@ -607,8 +554,6 @@ const OrderForm = ({order}: Props) => {
                                 </div>
                             </div>
                             <div>
-                                <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Đơn giá</div>
-                                <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Số lượng</div>
                                 <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Tổng tiền</div>
                                 <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Giảm giá</div>
                                 <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Phí vận chuyển</div>

@@ -59,7 +59,7 @@ const TableImportProduct = () => {
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receiptToDeleted?.id)
+        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receipt?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);
@@ -136,7 +136,7 @@ const TableImportProduct = () => {
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border border-[#eee] text-center">
+                                        className="min-w-[50px] px-2 py-2 font-bold text-black dark:text-white border border-[#eee] text-center">
                                         {column}
                                     </th>
                                 ))

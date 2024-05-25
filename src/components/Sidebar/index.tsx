@@ -14,9 +14,10 @@ import {
     BaggageClaim,
     Warehouse,
     Fence,
-    PackageSearch, LayoutGird
+    PackageSearch, LayoutGird, ContactEmloyee
 } from "@/components/Icons";
 import {List} from "postcss/lib/list";
+import SquareGanttChart from "@/components/Icons/SquareGanttChart";
 
 
 interface SidebarProps {
@@ -44,21 +45,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             icon: <LayoutGird/>,
         },
         {
-            name: "Sản phẩm",
-            path: "products",
-            icon: <Tag/>,
-            sub: [
-                {
-                    name: "Tất cả sản phẩm",
-                    path: "products"
-                },
-                {
-                    name: "Danh mục",
-                    path: "categories"
-                }
-            ]
-        },
-        {
             name: "Đơn hàng",
             path: "orders",
             icon: <ShoppingCart/>,
@@ -74,23 +60,24 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             ]
         },
         {
+            name: "Sản phẩm",
+            path: "products",
+            icon: <Tag/>,
+            sub: [
+                {
+                    name: "Tất cả sản phẩm",
+                    path: "products"
+                },
+                {
+                    name: "Danh mục",
+                    path: "categories"
+                }
+            ]
+        },
+        {
             name: "Nguyên vật liệu",
             path: "materials",
             icon: <PackageSearch/>,
-            sub: [
-                {
-                    name: "Tất cả nguyên vật liệu",
-                    path: "materials"
-                },
-                {
-                    name: "Thêm NVL",
-                    path: "add"
-                },
-                {
-                    name: "Cập nhật NVL",
-                    path: "update"
-                },
-            ]
         },
         {
             name: "Nhà cung cấp",
@@ -98,7 +85,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             icon: <BaggageClaim/>,
         },
         {
-            name: "Tồn kho",
+            name: "Xuất - Nhập kho",
             path: "inventory",
             icon: <Fence/>,
             sub: [
@@ -121,14 +108,24 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             ]
         },
         {
-            name: "Khuyến mãi",
-            path: "discounts",
-            icon: <TickerPercent/>,
+            name: "Tồn kho",
+            path: "",
+            icon: <SquareGanttChart/>
+        },
+        {
+            name: "Nhân viên",
+            path: "employee",
+            icon: <ContactEmloyee/>
         },
         {
             name: "Khách hàng",
             path: "customers",
             icon: <BookUser/>
+        },
+        {
+            name: "Khuyến mãi",
+            path: "discounts",
+            icon: <TickerPercent/>,
         },
         {
             name: "Kho",

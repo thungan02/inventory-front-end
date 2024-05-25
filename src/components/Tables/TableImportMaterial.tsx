@@ -6,7 +6,8 @@ import {ImportMaterialReceipt} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
     API_DELETE_IMPORT_MATERIAL_RECEIPT,
-    API_IMPORT_MATERIAL_RECEIPTS, API_GET_ALL_IMPORT_MATERIAL_RECEIPT,
+    API_GET_ALL_IMPORT_MATERIAL_RECEIPT,
+    API_IMPORT_MATERIAL_RECEIPTS,
 } from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
@@ -38,6 +39,7 @@ const TableImportMaterial = () => {
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
+    const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
 
     const handleChangeStatusOption = (status: string) => {
@@ -55,7 +57,7 @@ const TableImportMaterial = () => {
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_IMPORT_MATERIAL_RECEIPT + '/' + receiptToDeleted?.id)
+        await deleteData (API_DELETE_IMPORT_MATERIAL_RECEIPT + '/' + receipt?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getImportMaterialReceipts(API_GET_ALL_IMPORT_MATERIAL_RECEIPT);
@@ -132,7 +134,7 @@ const TableImportMaterial = () => {
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border border-[#eee] text-center">
+                                        className="min-w-[50px] px-2 py-2 font-bold text-black dark:text-white border border-[#eee] text-center">
                                         {column}
                                     </th>
                                 ))

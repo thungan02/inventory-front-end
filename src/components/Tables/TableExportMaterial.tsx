@@ -60,7 +60,7 @@ const TableExportMaterial = () => {
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_EXPORT_MATERIAL_RECEIPT + '/' + receiptToDeleted?.id)
+        await deleteData (API_DELETE_EXPORT_MATERIAL_RECEIPT + '/' + receipt?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getExportMaterialReceipts(API_GET_ALL_EXPORT_MATERIAL_RECEIPT);
@@ -137,7 +137,7 @@ const TableExportMaterial = () => {
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
-                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border border-[#eee] text-center">
+                                        className="min-w-[50px] px-2 py-2 font-bold text-black dark:text-white border border-[#eee] text-center">
                                         {column}
                                     </th>
                                 ))

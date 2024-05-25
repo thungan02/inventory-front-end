@@ -2,31 +2,35 @@
 import React, {useEffect, useState} from 'react';
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import {ExportMaterialReceipt, ExportProductReceipt} from "@/models/Model";
+import {
+    ExportProductReceipt,
+    ExportProductReceiptDetail
+} from "@/models/Model";
+import {getData} from "@/services/APIService";
+import ExportProductReceiptForm from "@/components/Forms/ExportProductForm";
 
 const EditExportProductReceiptPage = ({params} : {params: {id: string}}) => {
     const [receipt, setReceipt] = useState<ExportProductReceipt>();
-    const getData = async () => {
-        await fetch(`http://localhost:8000/api/v1/export-products/${params.id}`)
-            .then(res => {
-                return res.json()
-            })
-            .then(data => {
-                setReceipt(data);
-            })
-            .catch(err => {
-                console.log(err);
-            })
+    const [receiptDetails, setReceiptDetails] = useState<ExportProductReceiptDetail[]>();
+    const getExportProductReceipt = async () => {
+        const data : ExportProductReceipt = await getData(`http://localhost:8000/api/v1/product_export_receipts/${params.id}`);
+        setReceipt(data);
+    }
+
+    const getExportProductReceiptDetails = async () => {
+        const data : ExportProductReceiptDetail[] = await getData(`http://localhost:8000/api/v1/product_export_receipts/${params.id}/details`);
+        setReceiptDetails(data);
     }
 
 
     useEffect(() => {
-        getData();
+        getExportProductReceipt();
+        getExportProductReceiptDetails();
     }, []);
     return (
         <DefaultLayout>
             <Breadcrumb pageName="Cập nhật xuất kho thành phẩm"/>
-            {/*<MaterialForm material={material}/>*/}
+            <ExportProductReceiptForm receipt={receipt} receiptDetails={receiptDetails}/>
         </DefaultLayout>
     );
 };
