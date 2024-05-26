@@ -5,13 +5,16 @@ interface DropdownInputProps {
     id?: string;
     options?: Option[];
     onChangeDropdown: (option: string) => void;
+    selectedValue: string;
+    onChangeInputSearch:  React.ChangeEventHandler<HTMLInputElement> | undefined;
+    inputSearchValue: string;
 }
 
 export interface Option{
     key: string,
     value: string,
 }
-const DropdownInput = ({id, name, options = [], onChangeDropdown} : DropdownInputProps) => {
+const DropdownInput = ({id, name, options = [], onChangeDropdown, onChangeInputSearch, inputSearchValue, selectedValue} : DropdownInputProps) => {
     const [showDropdown, setShowDropdown] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>(options[0]?.value || '');
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -21,9 +24,13 @@ const DropdownInput = ({id, name, options = [], onChangeDropdown} : DropdownInpu
 
 
     useEffect(() => {
-        setInputValue(options[0]?.value || '');
-    }, [options]);
-
+        const selectedOption = options.find(option => option.key === selectedValue);
+        if (selectedOption) {
+            setInputValue(selectedOption.value);
+        } else {
+            setInputValue(options[0]?.value || '');
+        }
+    }, [options, selectedValue]);
     const handleClickOutside = (event: MouseEvent) => {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) && inputRef.current && !inputRef.current.contains(event.target as Node)) {
             setShowDropdown(false);
@@ -74,7 +81,7 @@ const DropdownInput = ({id, name, options = [], onChangeDropdown} : DropdownInpu
 
                 </div>
             </div>
-            <input type="text" className="border rounded-r px-3 w-full text-xs focus:outline-none" placeholder="Nhập"/>
+            <input type="text" className="border rounded-r px-3 w-full text-xs focus:outline-none" placeholder="Nhập" onChange={onChangeInputSearch} value={inputSearchValue}/>
         </div>
     );
 };

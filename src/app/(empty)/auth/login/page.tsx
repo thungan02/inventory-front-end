@@ -6,6 +6,7 @@ import {AuthBg, Clock, Email, Google,} from "@/components/Icons";
 import {useRouter} from "next/navigation";
 import {toast} from "react-toastify";
 import Cookies from "js-cookie";
+import {Tokens} from "@/models/Tokens";
 
 interface LoginResponse {
     accessToken: string;
@@ -46,8 +47,8 @@ const Login: React.FC = () => {
         });
         if (response.ok) {
             toast.success('Đăng nhập thành công');
-            const data = await response.json();
-            Cookies.set('token', JSON.stringify(data));
+            const data : Tokens = await response.json();
+            Cookies.set('token', data.accessToken);
             router.push('/');
         } else {
             toast.error('Đã có lỗi xảy ra. Thử lại sau');

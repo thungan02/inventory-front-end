@@ -1,21 +1,21 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import {Trash} from "@/components/Icons";
+import React, {forwardRef, Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {Employee, Profile} from "@/models/Model";
+import {Employee} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
-import {
-     API_DELETE_EMPLOYEE,
-   API_GET_ALL_EMPLOYEES,
-
-} from "@/config/api";
+import {API_DELETE_EMPLOYEE, API_GET_ALL_EMPLOYEES,} from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
 
 
-const filteredOptions : Option[] = [
+const roleOptions : Option[] = [
+    {
+        key: "",
+        value: "Tất cả"
+    },
     {
         key: "STOCKER",
         value: "Thủ kho"
@@ -32,28 +32,38 @@ const filteredOptions : Option[] = [
         key: "SALES",
         value: "Nhân viên bán hàng"
     },
-
 ]
 
-const TableEmployee = () => {
+const filteredOptions : Option[] = [
+    {
+        key: "name",
+        value: "Tên nhân viên"
+    },
+    {
+        key: "phone",
+        value: "Số điện thoại"
+    },
+    {
+        key: "email",
+        value: "Email"
+    },
+]
+
+const TableEmployee = forwardRef((props, ref) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const [employee, setEmployee] = useState<Employee | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [employeeToDeleted, setEmployeeToDeleted] = useState<Employee | null>(null);
-    const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
+    const [roleOptionSelected, setRoleOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [phoneFilter, setPhoneFilter] = useState<string>('');
+    const [searchValue, setSearchValue] = useState<string>("");
 
-    const handleChangeStatusOption = (status: string) => {
-        setStatusOptionSelected(status);
+
+    const handleChangeRoleOption = (status: string) => {
+        setRoleOptionSelected(status);
     }
 
-    const handleChangeCategoryOption = (category: string) => {
-        setCategoryOptionSelected(category);
-    }
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
@@ -68,7 +78,7 @@ const TableEmployee = () => {
         await deleteData (API_DELETE_EMPLOYEE + '/' + employeeToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
-        getEmlpoyees(API_GET_ALL_EMPLOYEES);
+        getEmployees(API_GET_ALL_EMPLOYEES);
     }
 
     const handleCloseDeleteModal = () => {
@@ -76,25 +86,31 @@ const TableEmployee = () => {
         setEmployeeToDeleted(null);
     }
 
-    const getEmlpoyees = async (endpoint: string) => {
+    const getEmployees = async (endpoint: string) => {
         const newEmployees : Employee[] = await getData(endpoint);
         setEmployees(newEmployees);
     }
 
     const handleResetFilters = () => {
-        setCategoryOptionSelected('');
-        setStatusOptionSelected('');
+        setRoleOptionSelected('');
+        setFilteredOptionSelected('');
+        setSearchValue('');
+        getEmployees(API_GET_ALL_EMPLOYEES);
     }
 
     const handleSearch = () => {
-        let params : string = '';
-        if (statusOptionSelected !== '') {
-            params += 'role?.name=' + statusOptionSelected;
+        const params = new URLSearchParams();
+        if (roleOptionSelected !== '') {
+            params.append('role', roleOptionSelected);
         }
-        getEmlpoyees(API_GET_ALL_EMPLOYEES + params);
+        if (filteredOptionSelected !== '' && searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getEmployees(`${API_GET_ALL_EMPLOYEES}?${params.toString()}`);
     }
+
     useEffect(() => {
-        getEmlpoyees(API_GET_ALL_EMPLOYEES)
+        getEmployees(API_GET_ALL_EMPLOYEES)
     }, []);
 
     const getRoleStyles = (roles: string) => {
@@ -136,16 +152,15 @@ const TableEmployee = () => {
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
 
-                    <div className="flex items-center"><label className="text-sm font-bold">Phân quyền</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Số
-                        điện thoại</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Chức vụ</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={filteredOptions} id="searchStatus" onChange={handleSearch}
-                                       selectedValue={statusOptionSelected}/>
+                        <SelectDefault options={roleOptions} id="searchStatus" onChange={handleChangeRoleOption}
+                                       selectedValue={roleOptionSelected}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -191,7 +206,7 @@ const TableEmployee = () => {
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <h5 className="font-medium text-black dark:text-white">
-                                        {employee.name}
+                                        {`${employee.profile.first_name} ${employee.profile.last_name}`}
                                     </h5>
                                     <p className="text-xs">{employee.profile?.phone ? employee.profile.phone : "Không rõ"}</p>
                                 </td>
@@ -269,6 +284,8 @@ const TableEmployee = () => {
             </div>
         </Fragment>
     );
-};
+});
+
+TableEmployee.displayName = 'TableEmployee';
 
 export default TableEmployee;

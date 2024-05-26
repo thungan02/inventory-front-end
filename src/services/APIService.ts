@@ -2,13 +2,18 @@ const handleError = (error: any): void => {
     console.error('API call error', error);
 }
 
-const getData = async (endpoint: string): Promise<any> => {
+const getData = async (endpoint: string, token?: string): Promise<any> => {
     try {
+        const headers : HeadersInit = {
+            'Accept': 'application/json'
+        }
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch(`${endpoint}`, {
             method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            },
+            headers
         });
 
         if (!response.ok) {

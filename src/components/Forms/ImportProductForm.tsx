@@ -1,130 +1,82 @@
 "use client";
-import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
+import React, {FormEvent, Fragment, useEffect, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
-import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
-import SeachInput from "@/components/Inputs/SeachInput";
+import {Trash} from "@/components/Icons";
 import Image from "next/image";
 import TextArea from "@/components/Inputs/TextArea";
-import Tooltip from "@/components/comon/Tooltip";
 import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
-import {
-    Product,
-    Material,
-    ImportMaterialReceiptDetail,
-    ImportMaterialReceipt,
-    ImportProductReceipt, ImportProductReceiptDetail
-} from "@/models/Model";
+import {ImportProductReceipt, ImportProductReceiptDetail, Warehouse} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
-import ContainerModal from "@/components/Modal/ContainerModal";
-import HeaderModal from "@/components/Modal/HeaderModal";
-import BodyModal from "@/components/Modal/BodyModal";
-import FooterModal from "@/components/Modal/FooterModal";
+import SearchProductModal from "@/components/Modal/SearchProductModal";
+import {ProductCart} from "@/models/Product";
 import {getData} from "@/services/APIService";
-import {API_GET_ALL_MATERIALS, API_GET_ALL_PRODUCTS} from "@/config/api";
+import {API_GET_ALL_WAREHOUSES} from "@/config/api";
+import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
+import {toast} from "react-toastify";
 
 interface Props {
     receipt?: ImportProductReceipt;
     receiptDetails?: ImportProductReceiptDetail[];
 }
 
-const modalColumns: string[] = ["Sản phẩm", "Khối lượng", "Quy cách đóng hàng", "Số lượng hiện có" ,"Trạng thái"];
-
-
+const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng nhập", "Tồn kho", "Giá", ""];
 const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Sản phẩm", "Số lượng", "Khối lượng", "Quy cách đóng gói", ""];
-    const [previewIndex, setPreviewIndex] = useState<number | null>(null);
-    const inputProductImage = useRef<HTMLInputElement | null>(null);
-    const [images, setImages] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
-
     const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
-    const [searchInput, setSearchInput] = useState<string>('')
-    const [searchInputInModal, setSearchInputInModal] = useState<string>('')
-    const searchInputInModalRef = useRef<HTMLInputElement>(null);
-    const [productName, setProductName] = useState<string>("");
-    // Danh sách nguyên liệu tìm kiếm
-    const [productsInModal, setProductsInModal] = useState<Product[]>([])
+    const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([]);
+    const [warehouseSelected, setWarehouseSelected] = useState<string>("");
 
     // Danh sách nguyên liệu nhập
-    const [products, setProducts] = useState<Product[]>([])
+    const [products, setProducts] = useState<ProductCart[]>([])
 
-    const handleSearchMaterialByProductName = async () => {
-        if (productName !== '') {
-            const data: Product[] = await getData(API_GET_ALL_PRODUCTS + "?name=" + productName);
-            setProductsInModal(data)
-        }
-
-    }
-    const openInputImage = () => {
-        inputProductImage.current?.click();
+    const handleChangeWarehouseOption = (warehouse: string) => {
+        setWarehouseSelected(warehouse);
     }
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        const newImages: string[] = [];
-        if (files) {
-            for (let i = 0; i < files.length; i++) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    if (reader.result) {
-                        newImages.push(reader.result.toString());
-                        if (newImages.length === files.length) {
-                            setImages([...images, ...newImages]);
-                        }
-                    }
-                }
-                reader.readAsDataURL(files[i]);
-            }
-        }
-        console.log(newImages);
+    const handleRemoveProductFromCart = (index: number) => {
+        const updatedProducts = [...products];
+        updatedProducts.splice(index, 1);
+        setProducts(updatedProducts);
     }
-    const handleChangeSearchInput = (event : React.ChangeEvent<HTMLInputElement>) => {
-        if (!showSearchProductModal && searchInputInModalRef.current) {
+
+    const handleChangeSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!showSearchProductModal) {
             setShowSearchProductModal(true);
-            setSearchInputInModal(event.target.value);
-            searchInputInModalRef.current.focus();
         }
     }
 
-    const handleDragStart = (index: number) => (event : React.DragEvent<HTMLDivElement>) => {
-        event.dataTransfer.setData('index', index.toString());
-    }
-
-    const handleDrag = (index: number) => (event : React.DragEvent<HTMLDivElement>) => {
-        const draggedIndex = Number(event.dataTransfer.getData("index"));
-        const newImages = [...images];
-        const [draggedImage] = newImages.splice(draggedIndex, 1);
-        newImages.splice(index, 0, draggedImage);
-        setImages(newImages);
+    const handleChangeQuantity = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const updatedProducts = [...products];
+        updatedProducts[index].quantityInCart = Number(e.target.value);
+        setProducts(updatedProducts);
     }
 
     const onSubmitMaterialForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!products || products.length === 0) {
+            toast.error("Hãy chọn ít nhất 1 sản phẩm");
+            return;
+        }
         const formData = new FormData(event.currentTarget);
-        const name : string = formData.get('name') as string;
-        const provider : string = formData.get('provider') as string;
-
-        if (name.trim() === '') {
-            setError('Tên nguyên vật liệu là bắt buộc');
-            return;
-        }
-        if (provider.trim() === '') {
-            setError('Nhà cung cấp là bắt buộc');
-            return;
-        }
-
-        const method = (receipt ? "PUT" : "POST");
-
-        const response = await fetch(`http://localhost:8000/api/v1/products${receipt?.id ? "/" + receipt.id : ''}`,
+        formData.set('warehouse_id', warehouseSelected);
+        const formDataObj: { [key: string]: any } = {};
+        formData.forEach((value, key) => {
+            formDataObj[key] = value;
+        });
+        formDataObj.products = products.map(product => ({
+            product_id: product.id,
+            quantity: product.quantityInCart
+        }));
+        const response = await fetch(`http://localhost:8000/api/v1/import/products`,
             {
-                method: method,
-                body: JSON.stringify(Object.fromEntries(formData)),
+                method: "POST",
+                body: JSON.stringify(formDataObj),
                 headers: {
                     'content-type': 'application/json'
                 }
@@ -138,6 +90,16 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
         }
     }
 
+    const getAllWarehouses = async () => {
+        const data : Warehouse[] = await getData(API_GET_ALL_WAREHOUSES);
+        const options : Option[] = data.map(warehouse => ({
+            key: warehouse.id.toString(),
+            value: `${warehouse.id} - ${warehouse.name}`
+        }));
+        setWarehouseSelected(options[0].key);
+        setWarehouseOptions(options);
+    }
+
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => {
@@ -148,93 +110,15 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
         }
     }, [error]);
 
+    useEffect(() => {
+        getAllWarehouses();
+    }, []);
+
     return (
         <Fragment>
             {
-                showSearchProductModal && (
-                    <ContainerModal>
-                        <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
-                        <BodyModal>
-                            <div className="grid grid-cols-12 gap-3">
-                                <div className="col-span-11">
-                                    <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef}
-                                                  value={productName} type="text" name="search"
-                                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProductName(e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <button
-                                        onClick={handleSearchMaterialByProductName}
-                                        className="bg-blue-500 hover:bg-blue-700 text-white w-full font-bold py-1 px-4 rounded">Tìm
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="pt-5">
-                                <div className="overflow-x-auto min-w-[900px]">
-                                    <table className="w-full table-auto">
-                                        <thead>
-                                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
-                                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
-                                                <div className="flex justify-center">
-                                                    <input type="checkbox"/>
-                                                </div>
-                                            </th>
-                                            {
-                                                modalColumns.map((modalColumns: string, index: number) => (
-                                                    <th key={"columns-" + index}
-                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white  border-[#eee] border text-center">
-                                                        {modalColumns}
-                                                    </th>
-                                                ))
-                                            }
-                                        </tr>
-                                        </thead>
-                                        <tbody className="text-left">
-                                        {productsInModal.map((product: Product, key: number) => (
-                                            <tr key={key} className="text-xs border border-[#eee]">
-                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-x">
-                                                    <div className="flex justify-center">
-                                                        <input type="checkbox"/>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                                    <div className="flex flex-row gap-2">
-                                                        <div>
-                                                            <Image src={"/images/default/no-image.png"} alt=""
-                                                                   width={50}
-                                                                   height={50}
-                                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
-                                                        </div>
-                                                        <div>
-                                                            <a href={`/products/${product.id}`} target="_blank"
-                                                               className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
-                                                            <div>ID: {product.id}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.weight} g
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.packing}
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.quantity}
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.status === "IN_STOCK" ? "Đang bán" : product.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Hết hàng"}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </BodyModal>
-                        <FooterModal/>
-                    </ContainerModal>
-                )
+                showSearchProductModal &&
+                <SearchProductModal onClose={() => setShowSearchProductModal(false)} products={products} setProducts={setProducts}/>
             }
             {
                 insertSuccess && <SuccessModal title="Thành công" message="Thêm nhập kho sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
@@ -250,20 +134,19 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                     </div>
 
                     <div className="py-2">
-                        <Input label="Mã hóa đơn" feedback="Mã hóa đơn là bắt buộc"
-                               placeholder="Nhập mã hóa đơn"
-                               defaultValue={receipt?.id}
-                               type="text" name=""/>
+                        <div className="flex items-center"><label className="text-sm font-bold" htmlFor="warehouseId">Kho</label></div>
+                        <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
+                            <SelectDefault onChange={handleChangeWarehouseOption} id="warehouseId" selectedValue={warehouseSelected}
+                                           options={warehouseOptions}/>
+                        </div>
 
-                        <SeachInput label="Tên kho" placeholder="Chọn tên kho" name=""/>
-
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3 mt-3">
                             <Input label="Ngày nhập" feedback="Ngày nhập"
                                    placeholder="Nhập ngày nhập"
                                    type="date" name="receipt_date"
                                    defaultValue={receipt?.receipt_date && new Date(receipt?.receipt_date).toISOString().split('T')[0]}/>
 
-                            <Select label="Loại" name="" defaultValue="NORMAL">
+                            <Select label="Loại" name="type" defaultValue="NORMAL">
                                 <option value="NORMAL">Thông thường</option>
                                 <option value="RETURN">Hoàn trả</option>
                             </Select>
@@ -282,15 +165,15 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                         <span className="text-sm text-black-2 font-bold mb-3 block">Sản phẩm</span>
                     </div>
                     <div className="flex flex-col gap-2 py-3">
-                        <div className="flex flex-row justify-between gap-2 items-center">
-                            <InputDefault placeholder="Nhập SKU hoặc tên sản phẩm" type="text" name=""
+                        <div className="flex flex-row justify-between gap-3 items-center">
+                            <InputDefault placeholder="Nhập tên sản phẩm" type="text" name="" value="" required={false}
                                           onChange={handleChangeSearchInput}/>
-                            <button className="appearance-none rounded px-4 py-1 btn-blue" type="button"
+                            <button className="appearance-none rounded px-10 py-1 btn-blue" type="button"
                                     onClick={() => setShowSearchProductModal(true)}>Tìm
                             </button>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <table className="w-full table-auto">
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-auto min-h-50 min-w-[950px]">
                                 <thead>
                                 <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
                                     {
@@ -304,118 +187,62 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 </tr>
                                 </thead>
                                 <tbody className="text-left">
-                                {
-                                    receiptDetails?.map((details: ImportProductReceiptDetail) => (
-                                        <tr key={details.product.id} className="text-xs border border-[#eee]">
-                                            <td className="px-2 py-3 dark:border-strokedark">
-                                                <div className="flex flex-row gap-2">
-                                                    <div>
-                                                        <Image src={"/images/default/no-image.png"} alt="" width={50}
-                                                               height={50}
-                                                               className="rounded border border-opacity-30 aspect-square object-cover"/>
-                                                    </div>
-                                                    <div>
-                                                        <a href={`/products/${details.product.id}`} target="_blank"
-                                                           className="font-bold text-sm text-blue-600 block mb-1">{details.product.name}</a>
-                                                        <div>SKU: {details.product.id}</div>
-                                                    </div>
+                                {products.map((product: ProductCart, index: number) => (
+                                    <tr key={index} className="text-xs border-b border-[#eee]">
+                                        <td className="px-2 py-3 dark:border-strokedark border-[#eee] border">
+                                            <div className="flex flex-row gap-2 ">
+                                                <div>
+                                                    <Image src={"/images/default/no-image.png"} alt="" width={50}
+                                                           height={50}
+                                                           className="rounded border border-opacity-30 aspect-square object-cover border-[#eee]"/>
                                                 </div>
-                                            </td>
-
-                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                <input defaultValue={1} min={0} type="number"
-                                                       className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
-                                            </td>
-
-                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                {details.product.weight} g
-                                            </td>
-
-                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                {details.product.packing}
-                                            </td>
-
-
-                                            <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
-                                                <div className="flex items-center space-x-3.5 justify-center">
-                                                    <button className="hover:text-primary" type="button"><Trash/>
-                                                    </button>
+                                                <div>
+                                                    <a href={`/products/${product.id}`} target="_blank"
+                                                       className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
+                                                    <div>SKU: {product.sku}</div>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                }
+                                            </div>
+                                        </td>
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                            {product.packing}
+                                        </td>
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                            <input defaultValue={product.quantityInCart} min={1}
+                                                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChangeQuantity(index, event)}
+                                                   type="number"
+                                                   className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm  w-full"/>
+                                        </td>
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
+                                            {product.quantity}
+                                        </td>
+
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
+                                            <h5 className="font-medium text-black dark:text-white">
+                                                {new Intl.NumberFormat('vi-VN', {
+                                                    style: 'currency',
+                                                    currency: 'VND'
+                                                }).format(product.price)}
+                                            </h5>
+                                        </td>
+
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                            <div className="flex items-center space-x-3.5 justify-center">
+                                                <button className="hover:text-primary" type="button"
+                                                        onClick={() => handleRemoveProductFromCart(index)}><Trash/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <div
-                    className="rounded-sm border border-stroke bg-white mt-5 px-5 pb-5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
-                    <div className="border-b border-opacity-30 ">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm text-black-2 font-bold block">Hình ảnh sản phẩm</span>
-                            <Tooltip message="Hình ảnh dạng jpg, png tỉ lệ 1:1 (hình vuông)">
-                                <CircleHelp stroke="#27c1f0"/>
-                            </Tooltip>
-                        </div>
-                    </div>
-                    <div className="border border-dotted rounded mt-5 py-5">
-                        <div className="flex flex-col items-center">
-                            <input type="file" ref={inputProductImage} className="hidden" accept="image/*"
-                                   onChange={handleImageChange}/>
-
-                            <div className="flex gap-2">
-                                {
-                                    images.map((image: string, index: number) => (
-                                        <div
-                                            key={index} className="border relative rounded aspect-square cursor-move"
-                                            onDragStart={handleDragStart(index)}
-                                            onDragOver={(event: React.DragEvent<HTMLDivElement>) => event.preventDefault()}
-                                            onDrag={handleDrag(index)}
-                                            draggable
-                                        >
-                                            <Image src={image} alt={`Product ${index + 1}`} className="object-cover"
-                                                   width={200} height={200} onClick={() => setPreviewIndex(index)}/>
-                                            <div
-                                                className="absolute inset-0 flex flex-row justify-center items-center opacity-0 hover:bg-[#31373dbf] hover:opacity-100 transition-opacity">
-                                                <button onClick={() => setPreviewIndex(index)}
-                                                        className="px-4 py-2 m-1">
-                                                    <Eye className="text-white"/>
-                                                </button>
-                                                <button className="px-4 py-2 m-1">
-                                                    <Trash className="text-white"/>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                }
-
-                                {previewIndex !== null && (
-                                    <div
-                                        className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-999999">
-                                        <div className="max-w-lg max-h-96 overflow-hidden">
-                                            <Image src={images[previewIndex]} alt={`Preview ${previewIndex + 1}`}
-                                                   width={600} height={600}/>
-                                            <button className="absolute top-2 right-2 text-white"
-                                                    onClick={() => setPreviewIndex(null)}>
-                                                Close
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <ImageUp/>
-                            <span className="text-blue-700 font-bold text-sm py-2 cursor-pointer"
-                                  onClick={openInputImage}>Thêm ảnh</span>
-                            <span className="text-blue-700 font-bold text-xs cursor-pointer">Thêm  từ URL <span
-                                className="text-body">(Hình ảnh/Video)</span></span>
-                        </div>
-                    </div>
-                </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/import-products"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/receipts/import-products"}
+                          className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 

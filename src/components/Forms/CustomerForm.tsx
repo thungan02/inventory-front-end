@@ -1,12 +1,12 @@
 "use client";
-import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
+import React, {FormEvent, Fragment, useEffect, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import TextArea from "@/components/Inputs/TextArea";
 import Radio from "@/components/Inputs/Radio";
 import Alert from "@/components/Alert";
 import Link from "next/link";
-import {Customer, GroupCustomer} from "@/models/Model";
+import {CustomerDetail, GroupCustomer} from "@/models/Model";
 import {useRouter} from "next/navigation";
 import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
 import {getData} from "@/services/APIService";
@@ -14,12 +14,11 @@ import {API_GET_ALL_DISTRICTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@
 import SuccessModal from "@/components/Modal/SuccessModal";
 
 interface Props {
-    customer?: Customer;
+    customer?: CustomerDetail;
 }
 
 const CustomerForm = ({customer}: Props) => {
     const router = useRouter();
-    const inputProductImage = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string | null>(null);
     const [groups, setGroups] = useState<GroupCustomer[]>();
     const [provinces, setProvinces] = useState<Province[]>([]);
@@ -29,7 +28,8 @@ const CustomerForm = ({customer}: Props) => {
     const [selectedDistrict, setSelectedDistrict] = useState<District>();
     const [selectedWard, setSelectedWard] = useState<Ward>();
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
-
+    const [selectedGroup, setSelectedGroup] = useState<number>(1);
+    const [selectedGender, setSelectedGender] = useState<boolean>(true);
 
     useEffect(() => {
         const initialAddress = async () => {
@@ -51,6 +51,9 @@ const CustomerForm = ({customer}: Props) => {
 
                 const ward = wardsResult.results.find(ward => ward.ward_name === customer.ward);
                 setSelectedWard(ward);
+
+                setSelectedGroup(customer.group_customer.id);
+                setSelectedGender(customer.gender)
             }
         }
         initialAddress();
@@ -110,9 +113,6 @@ const CustomerForm = ({customer}: Props) => {
                 console.log(err);
             })
     }
-    const openInputImage = () => {
-        inputProductImage.current?.click();
-    }
     const onSubmitCustomerForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -153,9 +153,8 @@ const CustomerForm = ({customer}: Props) => {
         } else {
             data.gender = 0;
         }
-        data.status = "ACTICE";
+        data.status = "ACTIVE";
         data.group_customer_id = Number(data.group_customer_id);
-        console.log(data);
 
         const method = (customer ? "PUT" : "POST");
 
@@ -195,7 +194,6 @@ const CustomerForm = ({customer}: Props) => {
         const getAllProvinces = async () => {
             const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
             setProvinces(result.results);
-            console.log(result.results);
         }
 
         getAllProvinces();
@@ -241,7 +239,7 @@ const CustomerForm = ({customer}: Props) => {
                                    name="phone"/>
 
                             <Select label="Nhóm khách hàng" name="group_customer_id"
-                                    defaultValue="Khách hàng thân thiết">
+                                    value={selectedGroup} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedGroup(Number(e.target.value))}>
                                 {
                                     groups?.map((group: GroupCustomer) => (
                                         <option key={group.id} value={group.id}>{group.name}</option>

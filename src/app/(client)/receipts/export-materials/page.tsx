@@ -16,7 +16,7 @@ const ExportMaterialPage = () => {
                         <FolderUp/>
                         <span className="hidden xl:block">Xuất Excel</span>
                     </button>
-                    <Link href={"/export-materials/new"} className="btn btn-blue text-sm inline-flex items-center gap-2">
+                    <Link href={"/receipts/export-materials/new"} className="btn btn-blue text-sm inline-flex items-center gap-2">
                         <CirclePlus/>
                         <span className="hidden xl:block">Xuất kho</span>
                     </Link>

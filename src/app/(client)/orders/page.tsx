@@ -11,10 +11,6 @@ const   OrderPage = () => {
         <DefaultLayout>
             <Breadcrumb pageName="Danh sách đơn hàng">
                 <div className="inline-flex gap-4">
-                    <button className="btn btn-blue text-sm inline-flex items-center gap-2">
-                        <FolderUp/>
-                        <span className="hidden xl:block">Xuất Excel</span>
-                    </button>
                     <Link href={"/orders/new"} className="btn btn-blue text-sm inline-flex items-center gap-2">
                         <CirclePlus/>
                         <span className="hidden xl:block">Tạo đơn hàng</span>

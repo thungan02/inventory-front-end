@@ -1,16 +1,25 @@
+"use client"
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Image from "next/image";
-import {Metadata} from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import Link from "next/link";
-
-export const metadata: Metadata = {
-    title: "Next.js Profile | TailAdmin - Next.js Dashboard Template",
-    description:
-        "This is Next.js Profile page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
-};
+import useAuth from "@/hooks/useAuth";
 
 const Profile = () => {
+    const {profile} = useAuth();
+
+    const getRoleDisplay = (role: string): string => {
+        switch (role) {
+            case "STOCKER":
+                return "Thủ kho";
+            case "ADMIN":
+                return "Admin";
+            case "SELLER":
+                return "Bán hàng";
+            default:
+                return "Không rõ";
+        }
+    }
+
     return (
         <DefaultLayout>
             <div className="mx-auto max-w-242.5">
@@ -18,7 +27,7 @@ const Profile = () => {
 
                 <div
                     className="overflow-hidden rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-                    <div className="relative z-20 h-35 md:h-65">
+                    <div className="relative z-0 h-35 md:h-65">
                         <Image
                             src={"/images/cover/cover-01.png"}
                             alt="profile cover"
@@ -118,9 +127,11 @@ const Profile = () => {
                         </div>
                         <div className="mt-4">
                             <h3 className="mb-1.5 text-2xl font-semibold text-black dark:text-white">
-                                Tên người dùng
+                                {`${profile.first_name} ${profile.last_name}`}
                             </h3>
-                            <p className="font-medium pb-12">Chức vụ</p>
+                            <p className="font-medium pb-12">
+                                {getRoleDisplay(profile.role)}
+                            </p>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="border-r-2">
@@ -129,22 +140,32 @@ const Profile = () => {
 
                                 <div className="col-span-2">
                                     <div className="grid grid-cols-3 gap-3 text-black text-left">
-                                        <div className="col-span-3 border-b-2 border-slate-200 pb-2"><h3 className="font-bold">Thông tin người dùng</h3></div>
+                                        <div className="col-span-3 border-b-2 border-slate-200 pb-2"><h3
+                                            className="font-bold">Thông tin người dùng</h3></div>
 
                                         <div className="">Họ đệm</div>
-                                        <div className="col-span-2">Nguyễn Thị Thu</div>
+                                        <div className="col-span-2">
+                                            {profile.first_name}
+                                        </div>
 
-                                        <div className="">Ten</div>
-                                        <div className="col-span-2">Ngân</div>
+                                        <div className="">Tên</div>
+                                        <div className="col-span-2">
+                                            {profile.last_name}
+                                        </div>
 
                                         <div className="">Sinh nhật</div>
-                                        <div className="col-span-2">20-11-2002</div>
+                                        <div className="col-span-2">
+                                            {profile?.birthday && new Date(profile.birthday).toLocaleDateString()}
+                                        </div>
 
                                         <div className="">Số điện thoại</div>
-                                        <div className="col-span-2">0375716638</div>
+                                        <div className="col-span-2">
+                                            {profile?.phone ? profile.phone : "Không rõ"}
+                                        </div>
 
                                         <div className="">Email</div>
-                                        <div className="col-span-2">thungangan123456@gmail.com
+                                        <div className="col-span-2">
+                                            {profile?.email ? profile.email : "Không rõ"}
                                         </div>
                                     </div>
 

@@ -6,12 +6,13 @@ import {ImportProductReceipt} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
     API_DELETE_IMPORT_PRODUCT_RECEIPT,
-    API_IMPORT_PRODUCT_RECEIPTS, API_GET_ALL_IMPORT_PRODUCT_RECEIPT,
+    API_GET_ALL_IMPORT_PRODUCT_RECEIPT,
+    API_IMPORT_PRODUCT_RECEIPTS,
 } from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
-import DropdownInput from "@/components/Inputs/DropdownInput";
+import ViewReceiptProductModal from "@/components/Modal/ViewReceiptProductModal";
 
 const statusOptions : Option[] = [
     {
@@ -28,38 +29,30 @@ const statusOptions : Option[] = [
     },
 ]
 
-const filteredOptions : Option[] = [
-    {
-        key: "name",
-        value: "Tên kho"
-    },
-]
 const TableImportProduct = () => {
     const [receipts, setReceipts] = useState<ImportProductReceipt[]>([]);
-    const [receipt, setReceipt] = useState<ImportProductReceipt | null>();
     const [receiptToDeleted, setReceiptToDeleted] = useState<ImportProductReceipt | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+    const [searchValue, setSearchValue] = useState<string>("");
+
+    const [showReceiptDetailModal, setShowReceiptDetailModal] = useState<boolean>(false);
+    const [receiptToViewDetail, setReceiptToViewDetail] = useState<ImportProductReceipt | null>(null);
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
     }
 
-
-    const handleChangeFilteredOption = (type: string) => {
-        setFilteredOptionSelected(type);
-    }
-
     const handleClickDeleteImportProductReceipt = (importProductReceipt: ImportProductReceipt) => {
-        setReceipt(importProductReceipt);
+        setReceiptToDeleted(importProductReceipt);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receipt?.id)
+        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receiptToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);
@@ -72,19 +65,30 @@ const TableImportProduct = () => {
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setReceipt(null);
+        setReceiptToDeleted(null);
+    }
+
+    const handleShowReceiptDetailModal = (receipt: ImportProductReceipt) => {
+        setReceiptToViewDetail(receipt);
+        setShowReceiptDetailModal(true);
     }
 
     const handleResetFilters = () => {
         setStatusOptionSelected('');
+        setSearchValue('');
+        setFilteredOptionSelected('name');
+        getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);
     }
 
     const handleSearch = () => {
-        let params : string = '';
+        const params = new URLSearchParams();
         if (statusOptionSelected !== '') {
-            params += '?type=' + statusOptionSelected;
+            params.append('type', statusOptionSelected);
         }
-        getImportProductReceipts(API_IMPORT_PRODUCT_RECEIPTS + params);
+        if (searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getImportProductReceipts(`${API_IMPORT_PRODUCT_RECEIPTS}?${params}`);
     }
 
     useEffect(() => {
@@ -95,10 +99,13 @@ const TableImportProduct = () => {
     return (
         <Fragment>
             {
+                showReceiptDetailModal && receiptToViewDetail && <ViewReceiptProductModal onClose={() => setShowReceiptDetailModal(false)} receipt={receiptToViewDetail}/>
+            }
+            {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhập kho sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nhập kho sản phẩm`} message={`Bạn chắc chắn muốn xóa nhập kho sản phẩm ${receipt?.id}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa nhập kho sản phẩm`} message={`Bạn chắc chắn muốn xóa nhập kho sản phẩm ${receiptToDeleted?.id}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -108,11 +115,6 @@ const TableImportProduct = () => {
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption}
                                        selectedValue={statusOptionSelected}/>
-                    </div>
-
-                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -192,9 +194,8 @@ const TableImportProduct = () => {
 
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <div className="flex items-center justify-center space-x-3.5">
-                                        <Link href={`/import-products/${importProductReceipt.id}`}
-                                              className="hover:text-primary"><Eye/></Link>
-                                        <button className="hover:text-primary" type="button"
+                                        <button className="hover:text-primary" onClick={() => handleShowReceiptDetailModal(importProductReceipt)}><Eye/></button>
+                                        <button className="hover:text-primary hidden" type="button"
                                                 onClick={() => handleClickDeleteImportProductReceipt(importProductReceipt)}>
                                             <Trash/>
                                         </button>
@@ -208,8 +209,8 @@ const TableImportProduct = () => {
                 <div className="flex flex-row justify-between mt-4 mb-3">
                     <div>
                         <select
-                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                            <option selected value={10}>Hiển thị 10</option>
+                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600" value={10}>
+                            <option value={10}>Hiển thị 10</option>
                             <option value={20}>Hiển thị 20</option>
                             <option value={50}>Hiển thị 50</option>
                         </select>

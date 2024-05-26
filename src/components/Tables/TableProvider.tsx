@@ -1,20 +1,18 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import {Eye, Trash} from "@/components/Icons";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
-import {
-    API_DELETE_PRODUCT, API_GET_ALL_MATERIALS,
-    API_GET_ALL_PRODUCTS,
-    API_GET_ALL_PROVIDERS
-} from "@/config/api";
+import {API_DELETE_PROVIDER, API_GET_ALL_PROVIDERS} from "@/config/api";
 import {deleteData, getData} from "@/services/APIService";
-import {Category, Product, Provider} from "@/models/Model";
+import {Provider} from "@/models/Model";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
-const statusOptions : Option[] = [
+const statusOptions: Option[] = [
     {
         key: "",
         value: "Tất cả trạng thái"
@@ -24,102 +22,145 @@ const statusOptions : Option[] = [
         value: "Đang hoạt động"
     },
     {
-        key: "DELETED",
-        value: "Không hoạt động"
-    },
-    {
         key: "TEMPORARILY_SUSPENDED",
         value: "Tạm ngưng"
     },
 ]
 
-const filteredOptions : Option[] = [
+const filteredOptions: Option[] = [
     {
         key: "name",
         value: "Tên nhà cung cấp"
     },
     {
-        key: "sku",
-        value: "Mã nhà cung cấp"
+        key: "phone",
+        value: "Số điện thoại"
+    },
+    {
+        key: "email",
+        value: "Email"
     },
 ]
 
-const TableProvider = () => {
+export type TableProviderHandle = {
+    exportProviders: (type: string) => void;
+}
+
+const TableProvider = forwardRef((props, ref) => {
     const [providers, setProviders] = useState<Provider[]>([]);
-    const [provider, setProvider] = useState<Provider | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
-    const [productToDeleted, setProductToDeleted] = useState<Provider | null>(null);
+    const [providerToDeleted, setProviderToDeleted] = useState<Provider | null>(null);
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [phoneFilter, setPhoneFilter] = useState<string>('');
+    const [searchValue, setSearchValue] = useState<string>("");
+
+    useImperativeHandle(ref, () => ({
+        exportProviders
+    }));
+
+    const formatDataForExport = (providers: Provider[]) => {
+        return providers.map((provider) => ({
+            ["Mã sản phẩm"]: provider.id,
+            ["Tên sản phẩm"]: provider.name,
+            ["Email"]: provider.email,
+            ["Số điện thoại"]: provider.phone,
+            ["Địa chỉ"]: provider.address,
+            ["Phường/Xã"]: provider.ward,
+            ["Quân/Huyện"]: provider.district,
+            ["Tỉnh/Thành phố"]: provider.city,
+            ["Ghi chú"]: provider.note,
+            ["Trạng thái"]: provider.status,
+            ["Ngày tạo"]: new Date(provider.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(provider.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportProviders = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let providersToExport: Provider[];
+            if (type === 'ALL') {
+                providersToExport = await getData(API_GET_ALL_PROVIDERS);
+            } else {
+                providersToExport = providers;
+            }
+            const dataToExport = formatDataForExport(providersToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Nhà cung cấp');
+            XLSX.writeFile(workbook, 'Nhà cung cấp.xlsx');
+        } catch (error: any) {
+            console.log(error);
+            toast.error("Đã có lỗi xảy ra");
+        }
+    }
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
     }
 
-    const handleChangeCategoryOption = (category: string) => {
-        setCategoryOptionSelected(category);
-    }
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteProduct = (provider: Provider) => {
-        setProductToDeleted(provider);
-        setIsOpenDeleteModal(true);
-    }
-
     const handleDelete = async () => {
-        await deleteData (API_DELETE_PRODUCT + '/' + productToDeleted?.id)
+        await deleteData(API_DELETE_PROVIDER + '/' + providerToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
-        getProviders(API_GET_ALL_PRODUCTS);
+        getProviders(API_GET_ALL_PROVIDERS);
     }
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setProductToDeleted(null);
+        setProviderToDeleted(null);
     }
 
     const handleClickDeleteProvider = (provider: Provider) => {
-        setProductToDeleted(provider);
+        setProviderToDeleted(provider);
         setIsOpenDeleteModal(true);
     }
 
     const getProviders = async (endpoint: string) => {
-        const newProviders : Provider[] = await getData(endpoint);
+        const newProviders: Provider[] = await getData(endpoint);
         setProviders(newProviders);
     }
 
 
     const handleResetFilters = () => {
-        setCategoryOptionSelected('');
         setStatusOptionSelected('');
+        setSearchValue('')
+        setFilteredOptionSelected('name')
+        getProviders(API_GET_ALL_PROVIDERS);
     }
 
     const handleSearch = () => {
-        let params : string = '';
+        const params = new URLSearchParams();
         if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+            params.append('status', statusOptionSelected);
         }
-        getProviders(API_GET_ALL_PROVIDERS + params);
+        if (searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getProviders(`${API_GET_ALL_PROVIDERS}?${params.toString()}`);
     }
     useEffect(() => {
         getProviders(API_GET_ALL_PROVIDERS)
     }, []);
 
 
-    const columns : string[] = ["ID", "Tên", "Số điện thoại", "Địa chỉ", "Email", "Ghi chú", "Trạng thái", ""];
+    const columns: string[] = ["ID", "Tên", "Số điện thoại", "Địa chỉ", "Email", "Ghi chú", "Trạng thái", ""];
     return (
         <Fragment>
             {
-                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công"
+                                                          onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${provider?.id} - ${provider?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`}
+                                                  message={`Bạn chắc chắn muốn xóa sản phẩm ${providerToDeleted?.id} - ${providerToDeleted?.name}. Hành động này sẽ không thể hoàn tác`}
+                                                  onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -131,16 +172,11 @@ const TableProvider = () => {
                                        selectedValue={statusOptionSelected}/>
                     </div>
 
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Số
-                        điện thoại</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={statusOptions} id="searchStatus" onChange={handleSearch}
-                                       selectedValue={statusOptionSelected}/>
-                    </div>
-
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected}
+                                       onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue}
+                                       onChangeInputSearch={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -261,6 +297,8 @@ const TableProvider = () => {
             </div>
         </Fragment>
     );
-};
+});
+
+TableProvider.displayName = 'TableProvider';
 
 export default TableProvider;

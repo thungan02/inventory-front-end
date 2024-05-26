@@ -1,21 +1,8 @@
-
-export interface Product {
-    id: number;
-    sku: string;
-    name: string;
-    packing: string;
-    price: number;
-    description: string;
-    status: string;
-    quantity: number;
-    weight: number;
-    created_at: Date;
-    updated_at: Date;
-}
+import {Product} from "@/models/Product";
 
 export interface Order {
     id: number;
-    created_by: string;
+    profile: Profile;
     address: string;
     phone: string;
     quantity: number;
@@ -33,9 +20,7 @@ export interface Order {
 export interface Material {
     id: number;
     name: string;
-    packing: string;
     origin: string;
-    price: number;
     unit: string;
     note: string;
     status: string;
@@ -48,6 +33,23 @@ export interface Material {
 export interface Customer {
     id: number;
     group_customer_id: number;
+    name: string;
+    city: string;
+    district: string;
+    ward: string;
+    birthday: Date;
+    gender: boolean;
+    phone: string;
+    email: string;
+    address: string;
+    note: string;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface CustomerDetail {
+    id: number;
+    group_customer: GroupCustomer;
     name: string;
     city: string;
     district: string;

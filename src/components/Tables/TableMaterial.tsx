@@ -1,17 +1,19 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import {Eye, Trash} from "@/components/Icons";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
-import {Material, Product} from "@/models/Model";
+import {Material} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
-import {API_DELETE_MATERIAL, API_DELETE_PRODUCT, API_GET_ALL_MATERIALS, API_GET_ALL_PRODUCTS} from "@/config/api";
+import {API_DELETE_MATERIAL, API_GET_ALL_MATERIALS} from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
 import Image from "next/image";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
-const statusOptions : Option[] = [
+const statusOptions: Option[] = [
     {
         key: "",
         value: "Tất cả trạng thái"
@@ -30,80 +32,128 @@ const statusOptions : Option[] = [
     },
 ]
 
-const filteredOptions : Option[] = [
+const filteredOptions: Option[] = [
     {
         key: "name",
-        value: "Tên nguyên vật liệu"
-    },
-    {
-        key: "sku",
-        value: "Mã nguyên vật liệu"
+        value: "Tên nguyên liệu"
     },
 ]
-const TableMaterials = () => {
+
+export type TableMaterialHandle = {
+    exportMaterials: (type: string) => void;
+}
+
+const TableMaterial = forwardRef((props, ref) => {
     const [materials, setMaterials] = useState<Material[]>([]);
-    const [material, setMaterial] = useState<Material | null>();
     const [materialToDeleted, setMaterialToDeleted] = useState<Material | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+    const [searchValue, setSearchValue] = useState<string>("");
+
+    useImperativeHandle(ref, () => ({
+        exportMaterials
+    }));
+
+    const formatDataForExport = (materials: Material[]) => {
+        return materials.map((material) => ({
+            ["Mã nguyên liệu"]: material.id,
+            ["Tên nguyên liệu"]: material.name,
+            ["Xuất xứ"]: material.origin,
+            ["Đơn vị"]: material.unit,
+            ["Tồn kho"]: material.quantity,
+            ["Trọng lượng"]: material.weight,
+            ["Trạng thái"]: material.status,
+            ["Ghi chú"]: material.note,
+            ["Ngày tạo"]: new Date(material.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(material.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportMaterials = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let materialsToExport: Material[];
+            if (type === 'ALL') {
+                materialsToExport = await getData(API_GET_ALL_MATERIALS);
+            } else {
+                materialsToExport = materials;
+            }
+            const dataToExport = formatDataForExport(materialsToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Nguyên vật liệu');
+            XLSX.writeFile(workbook, 'Nguyên vật liệu.xlsx');
+        } catch (error: any) {
+            console.log(error);
+            toast.error("Đã có lỗi xảy ra");
+        }
+    }
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
     }
-
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
     }
 
     const handleClickDeleteMaterial = (material: Material) => {
-        setMaterial(material);
+        setMaterialToDeleted(material);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_MATERIAL + '/' + material?.id)
+        await deleteData(API_DELETE_MATERIAL + '/' + materialToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getMaterials(API_GET_ALL_MATERIALS);
     }
 
     const getMaterials = async (endpoint: string) => {
-        const newMaterials : Material[] = await getData(endpoint);
+        const newMaterials: Material[] = await getData(endpoint);
         setMaterials(newMaterials);
     }
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setMaterial(null);
+        setMaterialToDeleted(null);
     }
 
     const handleResetFilters = () => {
         setStatusOptionSelected('');
+        setFilteredOptionSelected('name');
+        setSearchValue('');
+        getMaterials(API_GET_ALL_MATERIALS)
     }
 
     const handleSearch = () => {
-        let params : string = '';
+        const params = new URLSearchParams();
         if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+            params.append('status', statusOptionSelected);
         }
-        getMaterials(API_GET_ALL_MATERIALS + params);
+        if (filteredOptionSelected !== '' && searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getMaterials(`${API_GET_ALL_MATERIALS}?${params.toString()}`);
     }
     useEffect(() => {
         getMaterials(API_GET_ALL_MATERIALS)
     }, []);
 
-    const columns : string[] = ["Hình ảnh", "ID", "Tên", "Khối lượng","Số lượng", "Trạng thái", "Ghi chú", "Thời gian cập nhật", ""];
+    const columns: string[] = ["Hình ảnh", "ID", "Tên", "Khối lượng", "Số lượng", "Trạng thái", "Ghi chú", "Thời gian cập nhật", ""];
     return (
         <Fragment>
             {
-                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nguyên vật liệu thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nguyên vật liệu thành công"
+                                                          onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nguyên vật liệu`} message={`Bạn chắc chắn muốn xóa nguyên vật liệu ${material?.id} - ${material?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa nguyên vật liệu`}
+                                                  message={`Bạn chắc chắn muốn xóa nguyên vật liệu ${materialToDeleted?.id} - ${materialToDeleted?.name}. Hành động này sẽ không thể hoàn tác`}
+                                                  onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -118,7 +168,9 @@ const TableMaterials = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected}
+                                       onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue}
+                                       onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -248,6 +300,8 @@ const TableMaterials = () => {
             </div>
         </Fragment>
     );
-};
+});
 
-export default TableMaterials;
+TableMaterial.displayName = 'TableMaterial';
+
+export default TableMaterial;

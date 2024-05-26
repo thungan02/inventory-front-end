@@ -9,9 +9,9 @@ import Editor from "@/components/Inputs/Editor";
 import Alert from "@/components/Alert";
 import {usePathname, useRouter} from "next/navigation";
 import Link from "next/link";
-import {Product} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputMoney from "@/components/Inputs/InputMoney";
+import {Product} from "@/models/Product";
 
 interface Props {
     product?: Product;

@@ -1,18 +1,16 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import {Eye, Trash} from "@/components/Icons";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
-import {Customer, Provider} from "@/models/Model";
+import {Customer} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
-import {
-    API_DELETE_CUSTOMER,
-    API_GET_ALL_CUSTOMERS,
-    API_GET_ALL_PRODUCTS,
-} from "@/config/api";
+import {API_DELETE_CUSTOMER, API_GET_ALL_CUSTOMERS,} from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
 
 const filteredOptions : Option[] = [
@@ -21,33 +19,92 @@ const filteredOptions : Option[] = [
         value: "Tên khách hàng"
     },
     {
-        key: "sku",
-        value: "Mã khách hàng"
+        key: "phone",
+        value: "Số điện thoại"
+    },
+    {
+        key: "email",
+        value: "Email"
     },
 ]
 
-const TableCustomer = () => {
+const genderOptions : Option[] = [
+    {
+        key: "",
+        value: "Tất cả"
+    },
+    {
+        key: "1",
+        value: "Nam"
+    },
+    {
+        key: "0",
+        value: "Nữ"
+    },
+]
+
+export type TableCustomerHandle = {
+    exportCustomers: (type: string) => void;
+}
+
+const TableCustomer = forwardRef((props, ref) => {
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [customer, setCustomer] = useState<Customer | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [customerToDeleted, setCustomerToDeleted] = useState<Customer | null>(null);
-    const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
+    const [genderOptionSelected, setGenderOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [phoneFilter, setPhoneFilter] = useState<string>('');
+    const [searchValue, setSearchValue] = useState<string>("");
 
-    const handleChangeStatusOption = (status: string) => {
-        setStatusOptionSelected(status);
-    }
+    useImperativeHandle(ref, () => ({
+        exportCustomers
+    }));
 
-    const handleChangeCategoryOption = (category: string) => {
-        setCategoryOptionSelected(category);
+    const formatDataForExport = (customers: Customer[]) => {
+        return customers.map((customer) => ({
+            ["Mã khách hàng"]: customer.id,
+            ["Nhóm khách hàng"]: customer.group_customer_id,
+            ["Tên"]: customer.name,
+            ["Tỉnh/Thành phố"]: customer.city,
+            ["Quận/Huyện"]: customer.district,
+            ["Xã/Phường"]: customer.ward,
+            ["Sinh nhật"]: new Date(customer.birthday).toDateString(),
+            ["Giới tính"]: customer.gender,
+            ["Số điện thoại"]: customer.phone,
+            ["Email"]: customer.email,
+            ["Địa chỉ"]: customer.address,
+            ["Ghi chú"]: customer.note,
+            ["Ngày tạo"]: new Date(customer.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(customer.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportCustomers = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let customersToExport: Customer[];
+            if (type === 'ALL') {
+                customersToExport = await getData(API_GET_ALL_CUSTOMERS);
+            } else {
+                customersToExport = customers;
+            }
+            const dataToExport = formatDataForExport(customersToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Khách hàng');
+            XLSX.writeFile(workbook, 'Khách hàng.xlsx');
+        } catch (error: any) {
+            console.log(error);
+        }
     }
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
+    }
+
+    const handleChangeGenderOption = (gender: string) => {
+        setGenderOptionSelected(gender);
     }
 
     const handleDelete = async () => {
@@ -73,16 +130,21 @@ const TableCustomer = () => {
     }
 
     const handleResetFilters = () => {
-        setCategoryOptionSelected('');
-        setStatusOptionSelected('');
+        setGenderOptionSelected('');
+        setFilteredOptionSelected('name');
+        setSearchValue('');
+        getCustomers(API_GET_ALL_CUSTOMERS);
     }
 
     const handleSearch = () => {
-        let params : string = '';
-        if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+        const params = new URLSearchParams();
+        if (genderOptionSelected !== '') {
+            params.append('gender', genderOptionSelected);
         }
-        getCustomers(API_GET_ALL_CUSTOMERS + params);
+        if (filteredOptionSelected !== '' && searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getCustomers(`${API_GET_ALL_CUSTOMERS}?${params.toString()}`);
     }
     useEffect(() => {
         getCustomers(API_GET_ALL_CUSTOMERS)
@@ -103,14 +165,13 @@ const TableCustomer = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Số
-                        điện thoại</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Giới tính</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={filteredOptions} id="searchStatus" onChange={handleSearch}
-                                       selectedValue={statusOptionSelected}/>
+                        <SelectDefault options={genderOptions} id="searchGender" onChange={handleChangeGenderOption}
+                                       selectedValue={genderOptionSelected}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -202,8 +263,8 @@ const TableCustomer = () => {
                 <div className="flex flex-row justify-between mt-4 mb-3">
                     <div>
                         <select
-                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                            <option selected value={10}>Hiển thị 10</option>
+                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600" defaultValue={10}>
+                            <option value={10}>Hiển thị 10</option>
                             <option value={20}>Hiển thị 20</option>
                             <option value={50}>Hiển thị 50</option>
                         </select>
@@ -222,6 +283,8 @@ const TableCustomer = () => {
             </div>
         </Fragment>
     );
-};
+});
+
+TableCustomer.displayName = 'TableCustomer';
 
 export default TableCustomer;

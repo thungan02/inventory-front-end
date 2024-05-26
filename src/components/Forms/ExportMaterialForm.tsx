@@ -3,7 +3,7 @@ import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
-import SeachInput from "@/components/Inputs/SeachInput";
+import SearchInput from "@/components/Inputs/SearchInput";
 import Image from "next/image";
 import TextArea from "@/components/Inputs/TextArea";
 import Tooltip from "@/components/comon/Tooltip";
@@ -223,7 +223,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 </div>
                             </div>
                         </BodyModal>
-                        <FooterModal/>
+                        <FooterModal messageRightBtn="Nhập" onClose={() => setShowSearchProductModal(false)}/>
                     </ContainerModal>
                 )
             }
@@ -246,7 +246,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                defaultValue={receipt?.id}
                                type="text" name=""/>
 
-                        <SeachInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name=""/>
+                        <SearchInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name=""/>
 
                         <div className="grid grid-cols-2 gap-3">
                             <Input label="Ngày xuất" feedback="Ngày xuất"
@@ -406,7 +406,7 @@ const ExportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/export-materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/receipts/export-materials"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 
