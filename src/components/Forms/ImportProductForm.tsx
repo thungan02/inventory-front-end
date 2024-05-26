@@ -16,20 +16,21 @@ import {ProductCart} from "@/models/Product";
 import {getData} from "@/services/APIService";
 import {API_GET_ALL_WAREHOUSES} from "@/config/api";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
+import {toast} from "react-toastify";
 
 interface Props {
     receipt?: ImportProductReceipt;
     receiptDetails?: ImportProductReceiptDetail[];
 }
 
-const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng đặt", "Tồn kho", "Đơn giá", "Thành tiền (đ)", ""];
+const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng nhập", "Tồn kho", "Giá", ""];
 const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
     const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
-    const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([])
-    const [warehouseSelected, setWarehouseSelected] = useState<string>("")
+    const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([]);
+    const [warehouseSelected, setWarehouseSelected] = useState<string>("");
 
     // Danh sách nguyên liệu nhập
     const [products, setProducts] = useState<ProductCart[]>([])
@@ -58,25 +59,24 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
 
     const onSubmitMaterialForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!products || products.length === 0) {
+            toast.error("Hãy chọn ít nhất 1 sản phẩm");
+            return;
+        }
         const formData = new FormData(event.currentTarget);
-        const name : string = formData.get('name') as string;
-        const provider : string = formData.get('provider') as string;
-
-        if (name.trim() === '') {
-            setError('Tên nguyên vật liệu là bắt buộc');
-            return;
-        }
-        if (provider.trim() === '') {
-            setError('Nhà cung cấp là bắt buộc');
-            return;
-        }
-
-        const method = (receipt ? "PUT" : "POST");
-
-        const response = await fetch(`http://localhost:8000/api/v1/products${receipt?.id ? "/" + receipt.id : ''}`,
+        formData.set('warehouse_id', warehouseSelected);
+        const formDataObj: { [key: string]: any } = {};
+        formData.forEach((value, key) => {
+            formDataObj[key] = value;
+        });
+        formDataObj.products = products.map(product => ({
+            product_id: product.id,
+            quantity: product.quantityInCart
+        }));
+        const response = await fetch(`http://localhost:8000/api/v1/import/products`,
             {
-                method: method,
-                body: JSON.stringify(Object.fromEntries(formData)),
+                method: "POST",
+                body: JSON.stringify(formDataObj),
                 headers: {
                     'content-type': 'application/json'
                 }
@@ -146,7 +146,7 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                                    type="date" name="receipt_date"
                                    defaultValue={receipt?.receipt_date && new Date(receipt?.receipt_date).toISOString().split('T')[0]}/>
 
-                            <Select label="Loại" name="" defaultValue="NORMAL">
+                            <Select label="Loại" name="type" defaultValue="NORMAL">
                                 <option value="NORMAL">Thông thường</option>
                                 <option value="RETURN">Hoàn trả</option>
                             </Select>
@@ -166,7 +166,7 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                     </div>
                     <div className="flex flex-col gap-2 py-3">
                         <div className="flex flex-row justify-between gap-3 items-center">
-                            <InputDefault placeholder="Nhập tên sản phẩm" type="text" name="" value=""
+                            <InputDefault placeholder="Nhập tên sản phẩm" type="text" name="" value="" required={false}
                                           onChange={handleChangeSearchInput}/>
                             <button className="appearance-none rounded px-10 py-1 btn-blue" type="button"
                                     onClick={() => setShowSearchProductModal(true)}>Tìm
@@ -207,12 +207,12 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                                             {product.packing}
                                         </td>
                                         <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                            <input defaultValue={product.quantityInCart} min={1} max={product.quantity}
+                                            <input defaultValue={product.quantityInCart} min={1}
                                                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChangeQuantity(index, event)}
                                                    type="number"
                                                    className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm  w-full"/>
                                         </td>
-                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
                                             {product.quantity}
                                         </td>
 
@@ -222,14 +222,6 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                                                     style: 'currency',
                                                     currency: 'VND'
                                                 }).format(product.price)}
-                                            </h5>
-                                        </td>
-                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
-                                            <h5 className="font-medium text-black dark:text-white">
-                                                {new Intl.NumberFormat('vi-VN', {
-                                                    style: 'currency',
-                                                    currency: 'VND'
-                                                }).format(product.price * product.quantityInCart)}
                                             </h5>
                                         </td>
 

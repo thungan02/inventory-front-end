@@ -70,7 +70,6 @@ const MaterialForm = ({material} : Props) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const name : string = formData.get('name') as string;
-        const provider : string = formData.get('provider') as string;
 
         if (name.trim() === '') {
             setError('Tên nguyên vật liệu là bắt buộc');
