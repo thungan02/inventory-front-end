@@ -22,10 +22,6 @@ const statusOptions: Option[] = [
         value: "Đang hoạt động"
     },
     {
-        key: "DELETED",
-        value: "Không hoạt động"
-    },
-    {
         key: "TEMPORARILY_SUSPENDED",
         value: "Tạm ngưng"
     },

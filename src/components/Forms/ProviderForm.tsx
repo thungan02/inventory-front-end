@@ -28,7 +28,14 @@ const ProviderForm = ({provider}: Props) => {
     const [selectedProvince, setSelectedProvince] = useState<Province>();
     const [selectedDistrict, setSelectedDistrict] = useState<District>();
     const [selectedWard, setSelectedWard] = useState<Ward>();
+    const [selectedStatus, setSelectedStatus] = useState<string>("ACTIVE");
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (provider) {
+            setSelectedStatus(provider.status);
+        }
+    }, [provider]);
 
     useEffect(() => {
         const initialAddress = async () => {
@@ -248,10 +255,9 @@ const ProviderForm = ({provider}: Props) => {
                             </Select>
                         </div>
 
-                        <Select label="Trạng thái" name="status" defaultValue="ACTIVE">
+                        <Select label="Trạng thái" name="status" value={selectedStatus} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value)}>
                             <option value="ACTIVE">Đang hoạt động</option>
                             <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
-                            <option value="DELETED">Không hoạt động</option>
                         </Select>
 
 
