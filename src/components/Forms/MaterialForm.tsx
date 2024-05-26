@@ -3,7 +3,6 @@ import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
-import SearchInput from "@/components/Inputs/SearchInput";
 import Image from "next/image";
 import TextArea from "@/components/Inputs/TextArea";
 import Tooltip from "@/components/comon/Tooltip";
@@ -24,6 +23,13 @@ const MaterialForm = ({material} : Props) => {
     const [images, setImages] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
+    const [selectedStatus, setSelectedStatus] = useState<string>("ACTIVE");
+
+    useEffect(() => {
+        if (material) {
+            setSelectedStatus(material.status);
+        }
+    }, [material]);
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -68,10 +74,6 @@ const MaterialForm = ({material} : Props) => {
 
         if (name.trim() === '') {
             setError('Tên nguyên vật liệu là bắt buộc');
-            return;
-        }
-        if (provider.trim() === '') {
-            setError('Nhà cung cấp là bắt buộc');
             return;
         }
 
@@ -125,7 +127,7 @@ const MaterialForm = ({material} : Props) => {
                                defaultValue={material?.name}
                                type="text" name="name"/>
 
-                        <SearchInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp" name="provider"/>
+                        {/*<SearchInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp" name="provider"/>*/}
 
                         <div className="grid grid-cols-2 gap-3">
                             <Input label="Xuất xứ" feedback="Xuất xứ của nguyên vật liệu"
@@ -151,7 +153,7 @@ const MaterialForm = ({material} : Props) => {
                                 <option value="Túi">Túi</option>
                             </Select>
 
-                            <Select label="Trạng thái" name="status" defaultValue="IN_STOCK">
+                            <Select label="Trạng thái" name="status" value={selectedStatus} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value)}>
                                 <option value="IN_STOCK">Đang bán</option>
                                 <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
                                 <option value="OUT_OF_STOCK">Hết hàng</option>

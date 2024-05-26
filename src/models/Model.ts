@@ -47,6 +47,23 @@ export interface Customer {
     updated_at: Date;
 }
 
+export interface CustomerDetail {
+    id: number;
+    group_customer: GroupCustomer;
+    name: string;
+    city: string;
+    district: string;
+    ward: string;
+    birthday: Date;
+    gender: boolean;
+    phone: string;
+    email: string;
+    address: string;
+    note: string;
+    created_at: Date;
+    updated_at: Date;
+}
+
 export interface Provider {
     id: number;
     name: string;

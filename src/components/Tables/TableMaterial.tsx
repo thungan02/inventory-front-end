@@ -37,10 +37,6 @@ const filteredOptions: Option[] = [
         key: "name",
         value: "Tên nguyên liệu"
     },
-    {
-        key: "sku",
-        value: "Mã nguyên liệu"
-    },
 ]
 
 export type TableMaterialHandle = {

@@ -26,7 +26,7 @@ const EditCustomerPage = ({params} : {params: {id: string}}) => {
     }, []);
     return (
         <DefaultLayout>
-            <Breadcrumb pageName="Cập nhật nguyên vật liệu"/>
+            <Breadcrumb pageName="Cập nhật khách hàng"/>
             <CustomerForm customer={customer}/>
         </DefaultLayout>
     );
