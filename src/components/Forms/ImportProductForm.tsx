@@ -45,7 +45,7 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
         setProducts(updatedProducts);
     }
 
-    const handleChangeSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChangeSearchInput = () => {
         if (!showSearchProductModal) {
             setShowSearchProductModal(true);
         }
