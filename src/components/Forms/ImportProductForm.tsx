@@ -10,21 +10,11 @@ import Tooltip from "@/components/comon/Tooltip";
 import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
-import {
-    Product,
-    Material,
-    ImportMaterialReceiptDetail,
-    ImportMaterialReceipt,
-    ImportProductReceipt, ImportProductReceiptDetail
-} from "@/models/Model";
+import {ImportProductReceipt, ImportProductReceiptDetail} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
-import ContainerModal from "@/components/Modal/ContainerModal";
-import HeaderModal from "@/components/Modal/HeaderModal";
-import BodyModal from "@/components/Modal/BodyModal";
-import FooterModal from "@/components/Modal/FooterModal";
-import {getData} from "@/services/APIService";
-import {API_GET_ALL_MATERIALS, API_GET_ALL_PRODUCTS} from "@/config/api";
+import SearchProductModal from "@/components/Modal/SearchProductModal";
+import {ProductCart} from "@/models/Product";
 
 interface Props {
     receipt?: ImportProductReceipt;
@@ -44,23 +34,10 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
 
     const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
-    const [searchInput, setSearchInput] = useState<string>('')
-    const [searchInputInModal, setSearchInputInModal] = useState<string>('')
-    const searchInputInModalRef = useRef<HTMLInputElement>(null);
-    const [productName, setProductName] = useState<string>("");
-    // Danh sách nguyên liệu tìm kiếm
-    const [productsInModal, setProductsInModal] = useState<Product[]>([])
 
     // Danh sách nguyên liệu nhập
-    const [products, setProducts] = useState<Product[]>([])
+    const [products, setProducts] = useState<ProductCart[]>([])
 
-    const handleSearchMaterialByProductName = async () => {
-        if (productName !== '') {
-            const data: Product[] = await getData(API_GET_ALL_PRODUCTS + "?name=" + productName);
-            setProductsInModal(data)
-        }
-
-    }
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
@@ -84,11 +61,9 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
         }
         console.log(newImages);
     }
-    const handleChangeSearchInput = (event : React.ChangeEvent<HTMLInputElement>) => {
-        if (!showSearchProductModal && searchInputInModalRef.current) {
+    const handleChangeSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!showSearchProductModal) {
             setShowSearchProductModal(true);
-            setSearchInputInModal(event.target.value);
-            searchInputInModalRef.current.focus();
         }
     }
 
@@ -151,90 +126,8 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     return (
         <Fragment>
             {
-                showSearchProductModal && (
-                    <ContainerModal>
-                        <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
-                        <BodyModal>
-                            <div className="grid grid-cols-12 gap-3">
-                                <div className="col-span-11">
-                                    <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef}
-                                                  value={productName} type="text" name="search"
-                                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProductName(e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <button
-                                        onClick={handleSearchMaterialByProductName}
-                                        className="bg-blue-500 hover:bg-blue-700 text-white w-full font-bold py-1 px-4 rounded">Tìm
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="pt-5">
-                                <div className="overflow-x-auto min-w-[900px]">
-                                    <table className="w-full table-auto">
-                                        <thead>
-                                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
-                                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
-                                                <div className="flex justify-center">
-                                                    <input type="checkbox"/>
-                                                </div>
-                                            </th>
-                                            {
-                                                modalColumns.map((modalColumns: string, index: number) => (
-                                                    <th key={"columns-" + index}
-                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white  border-[#eee] border text-center">
-                                                        {modalColumns}
-                                                    </th>
-                                                ))
-                                            }
-                                        </tr>
-                                        </thead>
-                                        <tbody className="text-left">
-                                        {productsInModal.map((product: Product, key: number) => (
-                                            <tr key={key} className="text-xs border border-[#eee]">
-                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-x">
-                                                    <div className="flex justify-center">
-                                                        <input type="checkbox"/>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                                    <div className="flex flex-row gap-2">
-                                                        <div>
-                                                            <Image src={"/images/default/no-image.png"} alt=""
-                                                                   width={50}
-                                                                   height={50}
-                                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
-                                                        </div>
-                                                        <div>
-                                                            <a href={`/products/${product.id}`} target="_blank"
-                                                               className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
-                                                            <div>ID: {product.id}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.weight} g
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.packing}
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.quantity}
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.status === "IN_STOCK" ? "Đang bán" : product.status === "TEMPORARILY_SUSPENDED" ? "Tạm ngưng" : "Hết hàng"}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </BodyModal>
-                        <FooterModal/>
-                    </ContainerModal>
-                )
+                showSearchProductModal &&
+                <SearchProductModal onClose={() => setShowSearchProductModal(false)} products={products} setProducts={setProducts}/>
             }
             {
                 insertSuccess && <SuccessModal title="Thành công" message="Thêm nhập kho sản phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
@@ -282,10 +175,10 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                         <span className="text-sm text-black-2 font-bold mb-3 block">Sản phẩm</span>
                     </div>
                     <div className="flex flex-col gap-2 py-3">
-                        <div className="flex flex-row justify-between gap-2 items-center">
-                            <InputDefault placeholder="Nhập SKU hoặc tên sản phẩm" type="text" name=""
+                        <div className="flex flex-row justify-between gap-3 items-center">
+                            <InputDefault placeholder="Nhập tên sản phẩm" type="text" name="" value=""
                                           onChange={handleChangeSearchInput}/>
-                            <button className="appearance-none rounded px-4 py-1 btn-blue" type="button"
+                            <button className="appearance-none rounded px-10 py-1 btn-blue" type="button"
                                     onClick={() => setShowSearchProductModal(true)}>Tìm
                             </button>
                         </div>
@@ -415,7 +308,7 @@ const ImportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/import-products"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/receipts/import-products"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 

@@ -432,7 +432,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-3">
-                    <Link href={"/import-materialsInModal"} className="btn btn-danger text-sm inline-flex items-center gap-2">
+                    <Link href={"/receipts/import-materialsInModal"} className="btn btn-danger text-sm inline-flex items-center gap-2">
                         <span className="hidden xl:block">Hủy</span>
                     </Link>
 

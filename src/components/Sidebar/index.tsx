@@ -86,31 +86,41 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         },
         {
             name: "Xuất - Nhập kho",
-            path: "inventory",
+            path: "receipts",
             icon: <Fence/>,
             sub: [
                 {
                     name: "Nhập kho nguyên vật liệu",
-                    path: "import-materials"
+                    path: "receipts/import-materials"
                 },
                 {
                     name: "Xuất kho nguyên vật liệu",
-                    path: "export-materials"
+                    path: "receipts/export-materials"
                 },
                 {
                     name: "Nhập kho thành phẩm",
-                    path: "import-products"
+                    path: "receipts/import-products"
                 },
                 {
                     name: "Xuất kho thành phẩm",
-                    path: "export-products"
+                    path: "receipts/export-products"
                 },
             ]
         },
         {
             name: "Tồn kho",
-            path: "",
-            icon: <SquareGanttChart/>
+            path: "inventories",
+            icon: <SquareGanttChart/>,
+            sub: [
+                {
+                    name: "Tồn kho sản phẩm",
+                    path: "inventories/products"
+                },
+                {
+                    name: "Tồn kho nguyên vật liệu",
+                    path: "inventories/materials"
+                }
+            ]
         },
         {
             name: "Nhân viên",

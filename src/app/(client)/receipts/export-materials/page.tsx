@@ -5,26 +5,26 @@ import FolderUp from "@/components/Icons/FolderUp";
 import Link from "next/link";
 import {CirclePlus} from "@/components/Icons";
 import TableImportMaterial from "@/components/Tables/TableImportMaterial";
-import TableImportProduct from "@/components/Tables/TableImportProduct";
+import TableExportMaterial from "@/components/Tables/TableExportMaterial";
 
-const ImportProductPage = () => {
+const ExportMaterialPage = () => {
     return (
         <DefaultLayout>
-            <Breadcrumb pageName="Danh sách nhập kho thành phẩm">
+            <Breadcrumb pageName="Danh sách xuất kho nguyên vật liệu">
                 <div className="inline-flex gap-4">
                     <button className="btn btn-blue text-sm inline-flex items-center gap-2">
                         <FolderUp/>
                         <span className="hidden xl:block">Xuất Excel</span>
                     </button>
-                    <Link href={"/import-products/new"} className="btn btn-blue text-sm inline-flex items-center gap-2">
+                    <Link href={"/receipts/export-materials/new"} className="btn btn-blue text-sm inline-flex items-center gap-2">
                         <CirclePlus/>
-                        <span className="hidden xl:block">Nhập kho</span>
+                        <span className="hidden xl:block">Xuất kho</span>
                     </Link>
                 </div>
             </Breadcrumb>
-            <TableImportProduct/>
+            <TableExportMaterial/>
         </DefaultLayout>
     );
 };
 
-export default ImportProductPage;
+export default ExportMaterialPage;

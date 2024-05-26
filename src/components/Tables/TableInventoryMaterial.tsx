@@ -1,14 +1,14 @@
 "use client"
-import {Trash} from "@/components/Icons";
 import React, {forwardRef, Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {Employee} from "@/models/Model";
-import {deleteData, getData} from "@/services/APIService";
-import {API_DELETE_EMPLOYEE, API_GET_ALL_EMPLOYEES,} from "@/config/api";
-import DeleteModal from "@/components/Modal/DeleteModal";
+import {getData} from "@/services/APIService";
+import {API_GET_ALL_INVENTORY_MATERIALS,} from "@/config/api";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import {InventoryProduct} from "@/models/Product";
+import Image from "next/image";
+import {InventoryMaterial} from "@/models/Material";
 
 
 const roleOptions : Option[] = [
@@ -49,16 +49,13 @@ const filteredOptions : Option[] = [
     },
 ]
 
-const TableEmployee = forwardRef((props, ref) => {
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
+const TableInventoryMaterial = forwardRef((props, ref) => {
+    const [inventories, setInventories] = useState<InventoryMaterial[]>([]);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
-    const [employeeToDeleted, setEmployeeToDeleted] = useState<Employee | null>(null);
     const [roleOptionSelected, setRoleOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
     const [searchValue, setSearchValue] = useState<string>("");
-
 
     const handleChangeRoleOption = (status: string) => {
         setRoleOptionSelected(status);
@@ -69,33 +66,16 @@ const TableEmployee = forwardRef((props, ref) => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteEmployee = (employee: Employee) => {
-        setEmployeeToDeleted(employee);
-        setIsOpenDeleteModal(true);
-    }
-
-    const handleDelete = async () => {
-        await deleteData (API_DELETE_EMPLOYEE + '/' + employeeToDeleted?.id)
-        setIsOpenDeleteModal(false);
-        setIsOpenSuccessModal(true);
-        getEmployees(API_GET_ALL_EMPLOYEES);
-    }
-
-    const handleCloseDeleteModal = () => {
-        setIsOpenDeleteModal(false);
-        setEmployeeToDeleted(null);
-    }
-
-    const getEmployees = async (endpoint: string) => {
-        const newEmployees : Employee[] = await getData(endpoint);
-        setEmployees(newEmployees);
+    const getInventories = async (endpoint: string) => {
+        const newInventories : InventoryMaterial[] = await getData(endpoint);
+        setInventories(newInventories);
     }
 
     const handleResetFilters = () => {
         setRoleOptionSelected('');
         setFilteredOptionSelected('');
         setSearchValue('');
-        getEmployees(API_GET_ALL_EMPLOYEES);
+        getInventories(API_GET_ALL_INVENTORY_MATERIALS)
     }
 
     const handleSearch = () => {
@@ -106,47 +86,18 @@ const TableEmployee = forwardRef((props, ref) => {
         if (filteredOptionSelected !== '' && searchValue !== '') {
             params.append(filteredOptionSelected, searchValue);
         }
-        getEmployees(`${API_GET_ALL_EMPLOYEES}?${params.toString()}`);
+        getInventories(`${API_GET_ALL_INVENTORY_MATERIALS}?${params.toString()}`);
     }
 
     useEffect(() => {
-        getEmployees(API_GET_ALL_EMPLOYEES)
+        getInventories(API_GET_ALL_INVENTORY_MATERIALS)
     }, []);
 
-    const getRoleStyles = (roles: string) => {
-        switch (roles) {
-            case "STOCKER":
-                return "bg-danger text-danger";
-            case "ADMIN":
-                return "bg-amber-500 text-amber-500";
-            case "SUPERADMIN":
-                return "bg-rose-500 text-rose-500";
-            case "SALES":
-                return "bg-primary text-primary";
-        }
-    };
-    const getRoleText = (roles: string) => {
-        switch (roles) {
-            case "STOCKER":
-                return "Thủ kho";
-            case "ADMIN":
-                return "Quản lý";
-            case "SALES":
-                return "Nhân viên bán hàng";
-            case "SUPERADMIN":
-                return "Giám đốc";
-        }
-
-    };
-
-    const columns : string[] = ["ID", "Tên", "Sinh nhật", "Giới tính", "Email", "Phân quyền", "Trạng thái", ""];
+    const columns : string[] = ["ID", "Sản phẩm", "Kho", "Số lượng tồn kho", "Số lượng lưu kho tối thiểu"];
     return (
         <Fragment>
             {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhân viên thành công" onClose={() => setIsOpenSuccessModal(false)}/>
-            }
-            {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nhân viên`} message={`Bạn chắc chắn muốn xóa nhân viên ${employeeToDeleted?.id} - ${employeeToDeleted?.name}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -157,7 +108,7 @@ const TableEmployee = forwardRef((props, ref) => {
                         <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Chức vụ</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Kho</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={roleOptions} id="searchStatus" onChange={handleChangeRoleOption}
                                        selectedValue={roleOptionSelected}/>
@@ -176,11 +127,6 @@ const TableEmployee = forwardRef((props, ref) => {
                     <table className="w-full table-auto">
                         <thead>
                         <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
-                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
-                                <div className="flex justify-center">
-                                    <input type="checkbox"/>
-                                </div>
-                            </th>
                             {
                                 columns.map((column: string, index: number) => (
                                     <th key={"columns-" + index}
@@ -192,69 +138,43 @@ const TableEmployee = forwardRef((props, ref) => {
                         </tr>
                         </thead>
                         <tbody className="text-left">
-                        {employees.map((employee: Employee, key: number) => (
+                        {inventories.map((inventory: InventoryMaterial, key: number) => (
                             <tr key={key} className="text-xs">
-                                <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-x">
-                                    <div className="flex justify-center">
-                                        <input type="checkbox"/>
-                                    </div>
-                                </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <p className="text-black dark:text-white text-center">
-                                        {employee.id}
+                                        {inventory.id}
                                     </p>
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <h5 className="font-medium text-black dark:text-white">
-                                        {employee.name}
-                                    </h5>
-                                    <p className="text-xs">{employee.profile?.phone ? employee.profile.phone : "Không rõ"}</p>
+                                    <div className="flex flex-row gap-2">
+                                        <div>
+                                            <Image src={"/images/default/no-image.png"} alt=""
+                                                   width={50}
+                                                   height={50}
+                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
+                                        </div>
+                                        <div>
+                                            <a href={`/materials/${inventory.Material.id}`} target="_blank"
+                                               className="font-bold text-sm text-blue-600 block mb-1">{inventory.Material?.name}</a>
+                                            <div>SKU: {inventory.Material?.id}</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <h5 className="font-medium text-black dark:text-white">
-                                        {new Date(employee.profile?.birthday).toLocaleDateString()}
+                                        {`${inventory.warehouse.id} - ${inventory.warehouse.name}`}
                                     </h5>
                                 </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark text-end">
                                     <h5 className="font-medium text-black dark:text-white">
-                                        {employee.profile?.gender ? "Nam" : "Nữ"}
+                                        {inventory.quantity_available}
                                     </h5>
                                 </td>
 
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark text-end">
                                     <p className="text-black dark:text-white">
-                                        {employee.email}
+                                        {inventory.minimum_stock_level}
                                     </p>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-l">
-                                    <p
-                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium text-xs ${getRoleStyles(employee.role?.name)}`}
-                                    >
-                                        {
-                                            getRoleText(employee.role?.name)
-                                        }
-                                    </p>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-l">
-                                    <p
-                                        className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 font-medium text-xs ${
-                                            employee.role?.status === "ACTIVE"
-                                                ? "bg-success text-success"
-                                                : employee.role?.status === "DELETED"
-                                                    ? "bg-danger text-danger"
-                                                    : "bg-warning text-warning"
-                                        }`}
-                                    >
-                                        {
-                                            employee.role?.status === "ACTIVE" ? "Đang hoạt động" : "Không hoạt động"
-                                        }
-                                    </p>
-                                </td>
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <div className="flex items-center space-x-3.5 justify-center">
-                                        <button className="hover:text-primary" type="button"
-                                                onClick={() => handleClickDeleteEmployee(employee)}><Trash/></button>
-                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -286,6 +206,6 @@ const TableEmployee = forwardRef((props, ref) => {
     );
 });
 
-TableEmployee.displayName = 'TableEmployee';
+TableInventoryMaterial.displayName = 'TableInventoryMaterial';
 
-export default TableEmployee;
+export default TableInventoryMaterial;

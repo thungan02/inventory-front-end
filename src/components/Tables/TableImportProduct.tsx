@@ -36,13 +36,13 @@ const filteredOptions : Option[] = [
 ]
 const TableImportProduct = () => {
     const [receipts, setReceipts] = useState<ImportProductReceipt[]>([]);
-    const [receipt, setReceipt] = useState<ImportProductReceipt | null>();
     const [receiptToDeleted, setReceiptToDeleted] = useState<ImportProductReceipt | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+    const [searchValue, setSearchValue] = useState<string>("");
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
@@ -54,12 +54,12 @@ const TableImportProduct = () => {
     }
 
     const handleClickDeleteImportProductReceipt = (importProductReceipt: ImportProductReceipt) => {
-        setReceipt(importProductReceipt);
+        setReceiptToDeleted(importProductReceipt);
         setIsOpenDeleteModal(true);
     }
 
     const handleDelete = async () => {
-        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receipt?.id)
+        await deleteData (API_DELETE_IMPORT_PRODUCT_RECEIPT + '/' + receiptToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);
@@ -72,19 +72,25 @@ const TableImportProduct = () => {
 
     const handleCloseDeleteModal = () => {
         setIsOpenDeleteModal(false);
-        setReceipt(null);
+        setReceiptToDeleted(null);
     }
 
     const handleResetFilters = () => {
         setStatusOptionSelected('');
+        setSearchValue('');
+        setFilteredOptionSelected('name');
+        getImportProductReceipts(API_GET_ALL_IMPORT_PRODUCT_RECEIPT);
     }
 
     const handleSearch = () => {
-        let params : string = '';
+        const params = new URLSearchParams();
         if (statusOptionSelected !== '') {
-            params += '?type=' + statusOptionSelected;
+            params.append('type', statusOptionSelected);
         }
-        getImportProductReceipts(API_IMPORT_PRODUCT_RECEIPTS + params);
+        if (searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getImportProductReceipts(`${API_IMPORT_PRODUCT_RECEIPTS}?${params}`);
     }
 
     useEffect(() => {
@@ -98,7 +104,7 @@ const TableImportProduct = () => {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhập kho sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa nhập kho sản phẩm`} message={`Bạn chắc chắn muốn xóa nhập kho sản phẩm ${receipt?.id}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa nhập kho sản phẩm`} message={`Bạn chắc chắn muốn xóa nhập kho sản phẩm ${receiptToDeleted?.id}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -112,7 +118,7 @@ const TableImportProduct = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">

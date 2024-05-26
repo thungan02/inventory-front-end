@@ -1,6 +1,6 @@
 "use client"
 import {Eye, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
 import {Customer} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
@@ -9,6 +9,8 @@ import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
 
 const filteredOptions : Option[] = [
@@ -41,7 +43,11 @@ const genderOptions : Option[] = [
     },
 ]
 
-const TableCustomer = () => {
+export type TableCustomerHandle = {
+    exportCustomers: (type: string) => void;
+}
+
+const TableCustomer = forwardRef((props, ref) => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
@@ -50,6 +56,48 @@ const TableCustomer = () => {
     const [genderOptionSelected, setGenderOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
     const [searchValue, setSearchValue] = useState<string>("");
+
+    useImperativeHandle(ref, () => ({
+        exportCustomers
+    }));
+
+    const formatDataForExport = (customers: Customer[]) => {
+        return customers.map((customer) => ({
+            ["Mã khách hàng"]: customer.id,
+            ["Nhóm khách hàng"]: customer.group_customer_id,
+            ["Tên"]: customer.name,
+            ["Tỉnh/Thành phố"]: customer.city,
+            ["Quận/Huyện"]: customer.district,
+            ["Xã/Phường"]: customer.ward,
+            ["Sinh nhật"]: new Date(customer.birthday).toDateString(),
+            ["Giới tính"]: customer.gender,
+            ["Số điện thoại"]: customer.phone,
+            ["Email"]: customer.email,
+            ["Địa chỉ"]: customer.address,
+            ["Ghi chú"]: customer.note,
+            ["Ngày tạo"]: new Date(customer.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(customer.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportCustomers = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let customersToExport: Customer[];
+            if (type === 'ALL') {
+                customersToExport = await getData(API_GET_ALL_CUSTOMERS);
+            } else {
+                customersToExport = customers;
+            }
+            const dataToExport = formatDataForExport(customersToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Khách hàng');
+            XLSX.writeFile(workbook, 'Khách hàng.xlsx');
+        } catch (error: any) {
+            console.log(error);
+        }
+    }
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
@@ -235,6 +283,8 @@ const TableCustomer = () => {
             </div>
         </Fragment>
     );
-};
+});
+
+TableCustomer.displayName = 'TableCustomer';
 
 export default TableCustomer;
