@@ -57,7 +57,7 @@ const SelectDefault = ({id, name, options = [], onChange, selectedValue}: Select
     return (
         <div className="relative w-full">
             <input
-                className="block appearance-none cursor-default w-full text-xs bg-gray-200 border border-gray-200 text-gray-700 py-2 px-4 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                className="block appearance-none cursor-default w-full text-xs bg-gray-200 border border-gray-200 text-gray-700 py-2.5 px-4 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 type="text"
                 readOnly
                 name={name}

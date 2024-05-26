@@ -1,68 +1,102 @@
 "use client"
-import React, {forwardRef, Fragment, useEffect, useState} from "react";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
 import {getData} from "@/services/APIService";
-import {API_GET_ALL_INVENTORY_PRODUCTS,} from "@/config/api";
+import {API_GET_ALL_INVENTORY_PRODUCTS, API_GET_ALL_WAREHOUSES,} from "@/config/api";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
 import {InventoryProduct} from "@/models/Product";
 import Image from "next/image";
+import {SquarePen} from "@/components/Icons";
+import ContainerModal from "@/components/Modal/ContainerModal";
+import HeaderModal from "@/components/Modal/HeaderModal";
+import BodyModal from "@/components/Modal/BodyModal";
+import FooterModal from "@/components/Modal/FooterModal";
+import Input from "@/components/Inputs/Input";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
+import {Warehouse} from "@/models/Model";
 
-
-const roleOptions : Option[] = [
-    {
-        key: "",
-        value: "Tất cả"
-    },
-    {
-        key: "STOCKER",
-        value: "Thủ kho"
-    },
-    {
-        key: "ADMIN",
-        value: "Quản lý"
-    },
-    {
-        key: "SUPERADMIN",
-        value: "Giám đốc"
-    },
-    {
-        key: "SALES",
-        value: "Nhân viên bán hàng"
-    },
-]
-
-const filteredOptions : Option[] = [
-    {
-        key: "name",
-        value: "Tên khách hàng"
-    },
-    {
-        key: "phone",
-        value: "Số điện thoại"
-    },
-    {
-        key: "email",
-        value: "Email"
-    },
-]
+export type TableInventoryProductHandle = {
+    exportInventoryProducts: (type: string) => void;
+}
 
 const TableInventoryProduct = forwardRef((props, ref) => {
     const [inventories, setInventories] = useState<InventoryProduct[]>([]);
+    const [inventoryToEdit, setInventoryToEdit] = useState<InventoryProduct>();
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [roleOptionSelected, setRoleOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
     const [searchValue, setSearchValue] = useState<string>("");
 
-    const handleChangeRoleOption = (status: string) => {
-        setRoleOptionSelected(status);
+    const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([{key: "", value: "Tất cả"}])
+    const [warehouseSelected, setWarehouseSelected] = useState<string>("")
+
+    const handleChangeWarehouseOption = (warehouse: string) => {
+        setWarehouseSelected(warehouse);
     }
 
+    const getAllWarehouses = async () => {
+        const data : Warehouse[] = await getData(API_GET_ALL_WAREHOUSES);
+        const options : Option[] = data.map(warehouse => ({
+            key: warehouse.id.toString(),
+            value: `${warehouse.id} - ${warehouse.name}`
+        }));
+        options.unshift({ key: "", value: "Tất cả" });
+        setWarehouseSelected(options[0].key);
+        setWarehouseOptions(options);
+    }
 
-    const handleChangeFilteredOption = (type: string) => {
-        setFilteredOptionSelected(type);
+    useEffect(() => {
+        getAllWarehouses();
+    }, []);
+
+
+    useImperativeHandle(ref, () => ({
+        exportInventoryProducts
+    }));
+
+    const formatDataForExport = (inventories: InventoryProduct[]) => {
+        return inventories.map((inventory) => ({
+            ["SKU"]: inventory.product.sku,
+            ["Tên sản phẩm"]: inventory.product.name,
+            ["Cách đóng gói"]: inventory.product.packing,
+            ["Giá"]: inventory.product.price,
+            ["Tổng tồn kho"]: inventory.product.quantity,
+            ["Trọng lượng"]: inventory.product.weight,
+            ["Trạng thái"]: inventory.product.status,
+            ["Mã kho"]: inventory.warehouse.id,
+            ["Tên kho"]: inventory.warehouse.name,
+            ["Địa chỉ"]: inventory.warehouse.address,
+            ["Tỉnh/Thành phố"]: inventory.warehouse.city,
+            ["Quận/Huyện"]: inventory.warehouse.district,
+            ["Xã/Phường"]: inventory.warehouse.ward,
+            ["Số lượng trong kho hiện tại"]: inventory.quantity_available,
+            ["Ngày tạo"]: new Date(inventory.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(inventory.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportInventoryProducts = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let inventoriesToExport: InventoryProduct[];
+            if (type === 'ALL') {
+                inventoriesToExport = await getData(API_GET_ALL_INVENTORY_PRODUCTS);
+            } else {
+                inventoriesToExport = inventories;
+            }
+            const dataToExport = formatDataForExport(inventoriesToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Tồn kho sản phẩm');
+            XLSX.writeFile(workbook, 'Tồn kho sản phẩm.xlsx');
+        } catch (error: any) {
+            console.log(error);
+            toast.error("Đã có lỗi xảy ra");
+        }
     }
 
     const getInventories = async (endpoint: string) => {
@@ -71,46 +105,58 @@ const TableInventoryProduct = forwardRef((props, ref) => {
     }
 
     const handleResetFilters = () => {
-        setRoleOptionSelected('');
-        setFilteredOptionSelected('');
-        setSearchValue('');
+        setWarehouseSelected('');
         getInventories(API_GET_ALL_INVENTORY_PRODUCTS)
     }
 
     const handleSearch = () => {
         const params = new URLSearchParams();
-        if (roleOptionSelected !== '') {
-            params.append('role', roleOptionSelected);
-        }
-        if (filteredOptionSelected !== '' && searchValue !== '') {
-            params.append(filteredOptionSelected, searchValue);
+        if (warehouseSelected !== '') {
+            params.append('warehouse_id', warehouseSelected);
         }
         getInventories(`${API_GET_ALL_INVENTORY_PRODUCTS}?${params.toString()}`);
+    }
+
+    const [showEditModal, setShowEditModal] = useState<boolean>(false);
+    const handleClickEdit = (inventory: InventoryProduct) => {
+        setInventoryToEdit(inventory);
+        setShowEditModal(true);
+    }
+    const handleEdit = () => {
+
+        getInventories(API_GET_ALL_INVENTORY_PRODUCTS);
     }
 
     useEffect(() => {
         getInventories(API_GET_ALL_INVENTORY_PRODUCTS)
     }, []);
 
-    const columns : string[] = ["ID", "Sản phẩm", "Kho", "Số lượng tồn kho", "Số lượng lưu kho tối thiểu"];
+    const columns : string[] = ["ID", "Sản phẩm", "Kho", "Số lượng tồn kho", "Tổng số lượng tất cả các kho","Số lượng lưu kho tối thiểu", ""];
     return (
         <Fragment>
+            {
+                showEditModal && (
+                    <ContainerModal>
+                        <HeaderModal title="Cập nhật lưu kho" onClose={() => setShowEditModal(false)}/>
+                        <BodyModal>
+                            <div className="text-sm mb-5">Bạn điều chỉnh lưu kho cho sản phẩm  <span className="font-bold text-red">ID: {inventoryToEdit?.id}, Tên: {inventoryToEdit?.product.name}</span> tại kho <span className="font-bold">{inventoryToEdit?.warehouse.name}</span></div>
+                            <Input label="Số lượng lưu kho tối thiểu" feedback="" placeholder="Nhập số lượng lưu kho tối thiểu để thông báo nhập kho. VD: 0" type="number" name="" min={0} defaultValue={inventoryToEdit?.minimum_stock_level}/>
+                        </BodyModal>
+                        <FooterModal onClose={() => setShowEditModal(false)} disabledRightBtn={false}
+                                     onClickRightBtn={handleEdit} messageRightBtn="Cập nhật"/>
+                    </ContainerModal>
+                )
+            }
             {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhân viên thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
-
-                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
-                    </div>
-
                     <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Kho</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={roleOptions} id="searchStatus" onChange={handleChangeRoleOption}
-                                       selectedValue={roleOptionSelected}/>
+                        <SelectDefault options={warehouseOptions} id="searchStatus" onChange={handleChangeWarehouseOption}
+                                       selectedValue={warehouseSelected}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -169,11 +215,25 @@ const TableInventoryProduct = forwardRef((props, ref) => {
                                         {inventory.quantity_available}
                                     </h5>
                                 </td>
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark text-end">
+                                    <h5 className="font-medium text-black dark:text-white">
+                                        {inventory.product.quantity}
+                                    </h5>
+                                </td>
 
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark text-end">
                                     <p className="text-black dark:text-white">
                                         {inventory.minimum_stock_level}
                                     </p>
+                                </td>
+
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
+                                    <div className="flex items-center space-x-3.5 justify-center text-blue-600">
+                                        <button className="hover:text-primary" type="button"
+                                                onClick={() => handleClickEdit(inventory)}>
+                                            <SquarePen/>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

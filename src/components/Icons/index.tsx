@@ -34,6 +34,7 @@ import CreditCard from "@/components/Icons/CreditCard";
 import CircleDollarSign from "@/components/Icons/CircleDollarSign";
 import Truck from "@/components/Icons/Truck";
 import HandHelping from "@/components/Icons/HandHelping";
+import SquarePen from "@/components/Icons/SquarePen";
 export {
     Clock,
     Google,
@@ -70,5 +71,6 @@ export {
     CreditCard,
     CircleDollarSign,
     Truck,
-    HandHelping
+    HandHelping,
+    SquarePen
 }

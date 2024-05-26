@@ -3,14 +3,14 @@ import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
-import SeachInput from "@/components/Inputs/SeachInput";
+import SearchInput from "@/components/Inputs/SearchInput";
 import Image from "next/image";
 import TextArea from "@/components/Inputs/TextArea";
 import Tooltip from "@/components/comon/Tooltip";
 import Alert from "@/components/Alert";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
-import {Product, Material, ImportMaterialReceiptDetail, ImportMaterialReceipt} from "@/models/Model";
+import {ImportMaterialReceipt, ImportMaterialReceiptDetail, Material} from "@/models/Model";
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
 import {getData} from "@/services/APIService";
@@ -230,7 +230,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                 </div>
                             </div>
                         </BodyModal>
-                        <FooterModal/>
+                        <FooterModal messageRightBtn="Nhập"/>
                     </ContainerModal>
                 )
             }
@@ -253,7 +253,7 @@ const ImportMaterialReceiptForm = ({receipt, receiptDetails} : Props) => {
                                defaultValue={receipt?.id}
                                type="text" name=""/>
 
-                        <SeachInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name="provider"/>
+                        <SearchInput label="Tên kho nguyên vật liệu" placeholder="Chọn tên kho" name="provider"/>
 
                         <div className="grid grid-cols-2 gap-3">
                             <Input label="Ngày nhập" feedback="Ngày nhập"

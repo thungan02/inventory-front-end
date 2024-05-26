@@ -37,7 +37,7 @@ const roleOptions : Option[] = [
 const filteredOptions : Option[] = [
     {
         key: "name",
-        value: "Tên khách hàng"
+        value: "Tên nhân viên"
     },
     {
         key: "phone",
@@ -206,7 +206,7 @@ const TableEmployee = forwardRef((props, ref) => {
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <h5 className="font-medium text-black dark:text-white">
-                                        {employee.name}
+                                        {`${employee.profile.first_name} ${employee.profile.last_name}`}
                                     </h5>
                                     <p className="text-xs">{employee.profile?.phone ? employee.profile.phone : "Không rõ"}</p>
                                 </td>

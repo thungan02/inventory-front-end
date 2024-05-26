@@ -3,7 +3,7 @@ import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
 import {CircleHelp, Eye, ImageUp, Trash} from "@/components/Icons";
-import SeachInput from "@/components/Inputs/SeachInput";
+import SearchInput from "@/components/Inputs/SearchInput";
 import Image from "next/image";
 import TextArea from "@/components/Inputs/TextArea";
 import Tooltip from "@/components/comon/Tooltip";
@@ -125,7 +125,7 @@ const MaterialForm = ({material} : Props) => {
                                defaultValue={material?.name}
                                type="text" name="name"/>
 
-                        <SeachInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp" name="provider"/>
+                        <SearchInput label="Nhà cung cấp" placeholder="Chọn nhà cung cấp" name="provider"/>
 
                         <div className="grid grid-cols-2 gap-3">
                             <Input label="Xuất xứ" feedback="Xuất xứ của nguyên vật liệu"
