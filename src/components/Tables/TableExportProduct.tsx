@@ -2,7 +2,7 @@
 import {Eye, Trash} from "@/components/Icons";
 import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {ExportProductReceipt} from "@/models/Model";
+import {ExportProductReceipt, ImportProductReceipt} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
     API_DELETE_EXPORT_PRODUCT_RECEIPT,
@@ -13,6 +13,7 @@ import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import ViewReceiptExportProductModal from "@/components/Modal/ViewReceiptExportProductModal";
 
 const statusOptions : Option[] = [
     {
@@ -29,29 +30,24 @@ const statusOptions : Option[] = [
     },
 ]
 
-const filteredOptions : Option[] = [
-    {
-        key: "name",
-        value: "Tên kho"
-    },
-]
 const TableExportProduct = () => {
     const [receipts, setReceipts] = useState<ExportProductReceipt[]>([]);
     const [receipt, setReceipt] = useState<ExportProductReceipt | null>();
-    const [receiptToDeleted, setReceiptToDeleted] = useState<ExportProductReceipt | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+
+    const [showReceiptDetailModal, setShowReceiptDetailModal] = useState<boolean>(false);
+    const [receiptToViewDetail, setReceiptToViewDetail] = useState<ExportProductReceipt | null>(null);
+
+    const handleShowReceiptDetailModal = (receipt: ExportProductReceipt) => {
+        setReceiptToViewDetail(receipt);
+        setShowReceiptDetailModal(true);
+    }
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
-    }
-
-
-    const handleChangeFilteredOption = (type: string) => {
-        setFilteredOptionSelected(type);
     }
 
     const handleClickDeleteExportProductReceipt = (exportProductReceipt: ExportProductReceipt) => {
@@ -78,6 +74,7 @@ const TableExportProduct = () => {
 
     const handleResetFilters = () => {
         setStatusOptionSelected('');
+        getExportProductReceipts(API_EXPORT_PRODUCT_RECEIPTS);
     }
 
     const handleSearch = () => {
@@ -96,6 +93,9 @@ const TableExportProduct = () => {
     return (
         <Fragment>
             {
+                showReceiptDetailModal && receiptToViewDetail && <ViewReceiptExportProductModal onClose={()=> setShowReceiptDetailModal(false)} receipt={receiptToViewDetail}/>
+            }
+            {
                 isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa xuất nguyên vật liệu thành công" onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
@@ -109,11 +109,6 @@ const TableExportProduct = () => {
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption}
                                        selectedValue={statusOptionSelected}/>
-                    </div>
-
-                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -191,9 +186,8 @@ const TableExportProduct = () => {
 
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <div className="flex items-center justify-center space-x-3.5">
-                                        <Link href={`/export-products/${exportProductReceipt.id}`}
-                                              className="hover:text-primary"><Eye/></Link>
-                                        <button className="hover:text-primary" type="button"
+                                        <button className="hover:text-primary" onClick={() => handleShowReceiptDetailModal(exportProductReceipt)}><Eye/></button>
+                                        <button className="hover:text-primary hidden" type="button"
                                                 onClick={() => handleClickDeleteExportProductReceipt(exportProductReceipt)}><Trash/>
                                         </button>
                                     </div>
@@ -206,8 +200,8 @@ const TableExportProduct = () => {
                 <div className="flex flex-row justify-between mt-4 mb-3">
                     <div>
                         <select
-                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                            <option selected value={10}>Hiển thị 10</option>
+                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600" value={10}>
+                            <option value={10}>Hiển thị 10</option>
                             <option value={20}>Hiển thị 20</option>
                             <option value={50}>Hiển thị 50</option>
                         </select>

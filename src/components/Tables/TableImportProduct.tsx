@@ -6,12 +6,12 @@ import {ImportProductReceipt} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
 import {
     API_DELETE_IMPORT_PRODUCT_RECEIPT,
-    API_IMPORT_PRODUCT_RECEIPTS, API_GET_ALL_IMPORT_PRODUCT_RECEIPT,
+    API_GET_ALL_IMPORT_PRODUCT_RECEIPT,
+    API_IMPORT_PRODUCT_RECEIPTS,
 } from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
-import DropdownInput from "@/components/Inputs/DropdownInput";
 import ViewReceiptProductModal from "@/components/Modal/ViewReceiptProductModal";
 
 const statusOptions : Option[] = [
@@ -29,12 +29,6 @@ const statusOptions : Option[] = [
     },
 ]
 
-const filteredOptions : Option[] = [
-    {
-        key: "name",
-        value: "Tên kho"
-    },
-]
 const TableImportProduct = () => {
     const [receipts, setReceipts] = useState<ImportProductReceipt[]>([]);
     const [receiptToDeleted, setReceiptToDeleted] = useState<ImportProductReceipt | null>(null);
@@ -50,11 +44,6 @@ const TableImportProduct = () => {
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
-    }
-
-
-    const handleChangeFilteredOption = (type: string) => {
-        setFilteredOptionSelected(type);
     }
 
     const handleClickDeleteImportProductReceipt = (importProductReceipt: ImportProductReceipt) => {
@@ -126,11 +115,6 @@ const TableImportProduct = () => {
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
                         <SelectDefault options={statusOptions} id="searchStatus" onChange={handleChangeStatusOption}
                                        selectedValue={statusOptionSelected}/>
-                    </div>
-
-                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
