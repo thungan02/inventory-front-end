@@ -1,14 +1,10 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
+import {Eye, Trash} from "@/components/Icons";
 import React, {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
-import {Customer, Provider} from "@/models/Model";
+import {Customer} from "@/models/Model";
 import {deleteData, getData} from "@/services/APIService";
-import {
-    API_DELETE_CUSTOMER,
-    API_GET_ALL_CUSTOMERS,
-    API_GET_ALL_PRODUCTS,
-} from "@/config/api";
+import {API_DELETE_CUSTOMER, API_GET_ALL_CUSTOMERS,} from "@/config/api";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
@@ -21,33 +17,46 @@ const filteredOptions : Option[] = [
         value: "Tên khách hàng"
     },
     {
-        key: "sku",
-        value: "Mã khách hàng"
+        key: "phone",
+        value: "Số điện thoại"
+    },
+    {
+        key: "email",
+        value: "Email"
+    },
+]
+
+const genderOptions : Option[] = [
+    {
+        key: "",
+        value: "Tất cả"
+    },
+    {
+        key: "1",
+        value: "Nam"
+    },
+    {
+        key: "0",
+        value: "Nữ"
     },
 ]
 
 const TableCustomer = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [customer, setCustomer] = useState<Customer | null>();
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [customerToDeleted, setCustomerToDeleted] = useState<Customer | null>(null);
-    const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
+    const [genderOptionSelected, setGenderOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [phoneFilter, setPhoneFilter] = useState<string>('');
-
-    const handleChangeStatusOption = (status: string) => {
-        setStatusOptionSelected(status);
-    }
-
-    const handleChangeCategoryOption = (category: string) => {
-        setCategoryOptionSelected(category);
-    }
+    const [searchValue, setSearchValue] = useState<string>("");
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
+    }
+
+    const handleChangeGenderOption = (gender: string) => {
+        setGenderOptionSelected(gender);
     }
 
     const handleDelete = async () => {
@@ -73,16 +82,21 @@ const TableCustomer = () => {
     }
 
     const handleResetFilters = () => {
-        setCategoryOptionSelected('');
-        setStatusOptionSelected('');
+        setGenderOptionSelected('');
+        setFilteredOptionSelected('name');
+        setSearchValue('');
+        getCustomers(API_GET_ALL_CUSTOMERS);
     }
 
     const handleSearch = () => {
-        let params : string = '';
-        if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+        const params = new URLSearchParams();
+        if (genderOptionSelected !== '') {
+            params.append('gender', genderOptionSelected);
         }
-        getCustomers(API_GET_ALL_CUSTOMERS + params);
+        if (filteredOptionSelected !== '' && searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getCustomers(`${API_GET_ALL_CUSTOMERS}?${params.toString()}`);
     }
     useEffect(() => {
         getCustomers(API_GET_ALL_CUSTOMERS)
@@ -103,14 +117,13 @@ const TableCustomer = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
-                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Số
-                        điện thoại</label></div>
+                    <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Giới tính</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={filteredOptions} id="searchStatus" onChange={handleSearch}
-                                       selectedValue={statusOptionSelected}/>
+                        <SelectDefault options={genderOptions} id="searchGender" onChange={handleChangeGenderOption}
+                                       selectedValue={genderOptionSelected}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">

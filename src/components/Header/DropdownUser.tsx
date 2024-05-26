@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {Contact, LogOut, Profile, Setting} from "@/components/Icons";
+import useAuth from "@/hooks/useAuth";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
+
+  const {profile, logout} = useAuth();
 
   // close on click outside
   useEffect(() => {
@@ -34,6 +37,8 @@ const DropdownUser = () => {
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
   });
+  // Custom display
+  const roleDisplay = profile && (profile.role === "STOCKER" ? "Thủ kho" : profile.role === "ADMIN" ? "Admin" : profile.role === "SELLER" ? "Bán hàng" : "Không rõ");
 
   return (
     <div className="relative">
@@ -45,9 +50,11 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Thu Ngân
+            {profile && `${profile.first_name} ${profile.last_name}`}
           </span>
-          <span className="block text-xs">Thủ kho</span>
+          <span className="block text-xs">
+            {roleDisplay}
+          </span>
         </span>
 
         <span className="h-10 w-10 rounded-full">
@@ -92,8 +99,8 @@ const DropdownUser = () => {
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
           <li>
             <Link
-              href="/profile"
-              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+              href={"/profile"}
+              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary"
             >
               <Profile/>
               Thông tin cá nhân
@@ -102,7 +109,7 @@ const DropdownUser = () => {
           <li>
             <Link
               href="#"
-              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary"
             >
               <Contact/>
               Liên hệ
@@ -110,15 +117,15 @@ const DropdownUser = () => {
           </li>
           <li>
             <Link
-              href="/settings"
-              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+              href={"/settings"}
+              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary"
             >
               <Setting/>
               Cài đặt
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        <button className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary" onClick={logout}>
           <LogOut/>
           Đăng xuất
         </button>

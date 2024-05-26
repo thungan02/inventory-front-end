@@ -28,8 +28,12 @@ import CircleHelp from "@/components/Icons/CircleHelp";
 import Info from "@/components/Icons/Info";
 import TriangleAlert from "@/components/Icons/TriangleAlert";
 import Check from "@/components/Icons/Check";
-import ContactEmloyee from "@/components/Icons/ContactEmloyee";
+import ContactEmployee from "@/components/Icons/ContactEmployee";
 import SquareGanttChart from "@/components/Icons/SquareGanttChart";
+import CreditCard from "@/components/Icons/CreditCard";
+import CircleDollarSign from "@/components/Icons/CircleDollarSign";
+import Truck from "@/components/Icons/Truck";
+import HandHelping from "@/components/Icons/HandHelping";
 export {
     Clock,
     Google,
@@ -61,6 +65,10 @@ export {
     Info,
     TriangleAlert,
     Check,
-    ContactEmloyee,
-    SquareGanttChart
+    ContactEmployee,
+    SquareGanttChart,
+    CreditCard,
+    CircleDollarSign,
+    Truck,
+    HandHelping
 }

@@ -7,71 +7,31 @@ import Radio from "@/components/Inputs/Radio";
 import Alert from "@/components/Alert";
 import {usePathname, useRouter} from "next/navigation";
 import Link from "next/link";
-import {Order, Product} from "@/models/Model";
+import {Order} from "@/models/Model";
 import InputDefault from "@/components/Inputs/InputDefault";
-import {Trash} from "@/components/Icons";
+import {CircleHelp, CreditCard, Trash, Truck} from "@/components/Icons";
 import Image from "next/image";
 import {District, DistrictResponse, Province, ProvinceResponse, Ward, WardResponse} from "@/models/ProvinceModel";
 import {getData} from "@/services/APIService";
-import {API_GET_ALL_DISTRICTS, API_GET_ALL_PRODUCTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
+import {API_GET_ALL_DISTRICTS, API_GET_ALL_PROVINCES, API_GET_ALL_WARDS} from "@/config/api";
 import SuccessModal from "@/components/Modal/SuccessModal";
-import ContainerModal from "@/components/Modal/ContainerModal";
-import HeaderModal from "@/components/Modal/HeaderModal";
-import BodyModal from "@/components/Modal/BodyModal";
-import FooterModal from "@/components/Modal/FooterModal";
+import Tooltip from "@/components/comon/Tooltip";
+import SearchProductModal from "@/components/Modal/SearchProductModal";
+import {ProductCart} from "@/models/Product";
+import CircleDollarSign from "../Icons/CircleDollarSign";
+import HandHelping from "../Icons/HandHelping";
 
 interface Props {
     order?: Order;
 }
 
-let productsExample: Product[] = [
-    {
-        id: 1,
-        sku: "MK01",
-        name: "Macca",
-        packing: "Hũ thủy tinh",
-        price: 159000,
-        quantity: 15,
-        weight: 10,
-        description: "Sản phẩm được nhập từ Úc có giấy tờ công bố đầy đủ",
-        status: "IN_STOCK",
-        created_at: new Date("2024-05-15T22:33:25.000000Z"),
-        updated_at: new Date("2024-05-15T22:33:25.000000Z")
-    },
-    {
-        id: 2,
-        sku: "MH02",
-        name: "Hạnh nhân",
-        packing: "Túi zip",
-        price: 210000,
-        quantity: 35,
-        weight: 500,
-        description: "Sản phẩm được nhập từ Úc",
-        status: "IN_STOCK",
-        created_at: new Date("2024-05-15T22:33:25.000000Z"),
-        updated_at: new Date("2024-05-15T22:33:25.000000Z")
-    },
-    {
-        id: 3,
-        sku: "MH03",
-        name: "Óc chó vàng",
-        packing: "Hủ nhựa",
-        price: 255000,
-        quantity: 6,
-        weight: 400,
-        description: "Sản phẩm được nhập từ Úc",
-        status: "IN_STOCK",
-        created_at: new Date("2024-05-15T22:33:25.000000Z"),
-        updated_at: new Date("2024-05-15T22:33:25.000000Z")
-    },
-];
-const modalColumns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng", "Sẵn có", "Giá (đ)", "Thành tiền (đ)"];
-const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng", "Sẵn có", "Giá (đ)", "Thành tiền (đ)", ""];
-
+const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Số lượng đặt", "Tồn kho", "Đơn giá", "Thành tiền (đ)", ""];
 const OrderForm = ({order}: Props) => {
     const router = useRouter();
     const pathname = usePathname();
     const inputProductImage = useRef<HTMLInputElement>(null);
+    const [products, setProducts] = useState<ProductCart[]>([]);
+    const [totalPrice, setTotalPrice] = useState<number>(0);
     const [provinces, setProvinces] = useState<Province[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [wards, setWards] = useState<Ward[]>([]);
@@ -80,22 +40,6 @@ const OrderForm = ({order}: Props) => {
     const [selectedWard, setSelectedWard] = useState<Ward>();
 
     const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
-    const [searchInput, setSearchInput] = useState<string>('')
-    const [searchInputInModal, setSearchInputInModal] = useState<string>('')
-    const searchInputInModalRef = useRef<HTMLInputElement>(null);
-
-    // Modal products
-    const [productName, setProductName] = useState<string>("");
-    const [products, setProducts] = useState<Product[]>([])
-
-    const handleSearchProductByProductName = async () => {
-        if (productName !== '') {
-            const data: Product[] = await getData(API_GET_ALL_PRODUCTS + "?name=" + productName);
-            setProducts(data)
-        }
-
-    }
-
 
     useEffect(() => {
         const initialAddress = async () => {
@@ -129,7 +73,7 @@ const OrderForm = ({order}: Props) => {
 
         if (selectedId) {
             try {
-                const districtsResult : DistrictResponse = await getData(API_GET_ALL_DISTRICTS + '/' + selectedId);
+                const districtsResult: DistrictResponse = await getData(API_GET_ALL_DISTRICTS + '/' + selectedId);
                 setDistricts(districtsResult.results);
                 setWards([])
             } catch (err) {
@@ -148,7 +92,7 @@ const OrderForm = ({order}: Props) => {
 
         if (selectedId) {
             try {
-                const wardsResult : WardResponse = await getData(API_GET_ALL_WARDS + '/' + selectedId);
+                const wardsResult: WardResponse = await getData(API_GET_ALL_WARDS + '/' + selectedId);
                 setWards(wardsResult.results);
             } catch (err) {
                 console.log(err);
@@ -164,18 +108,15 @@ const OrderForm = ({order}: Props) => {
         setSelectedWard(selected);
     }
 
-    const handleChangeSearchInput = (event : React.ChangeEvent<HTMLInputElement>) => {
-        if (!showSearchProductModal && searchInputInModalRef.current) {
+    const handleChangeSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!showSearchProductModal) {
             setShowSearchProductModal(true);
-            setSearchInputInModal(event.target.value);
-            searchInputInModalRef.current.focus();
         }
     }
     const openInputImage = () => {
         inputProductImage.current?.click();
     }
     const [error, setError] = useState<string | null>(null);
-    const [description, setDescription] = useState<string>('');
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
 
     const onSubmitOrderForm = async (event: FormEvent<HTMLFormElement>) => {
@@ -226,6 +167,12 @@ const OrderForm = ({order}: Props) => {
         }
     }
 
+    const handleChangeQuantity = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const updatedProducts = [...products];
+        updatedProducts[index].quantityInCart = Number(e.target.value);
+        setProducts(updatedProducts);
+    }
+
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => {
@@ -240,114 +187,35 @@ const OrderForm = ({order}: Props) => {
         const getAllProvinces = async () => {
             const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
             setProvinces(result.results);
-            console.log(result.results);
         }
 
         getAllProvinces();
     }, []);
 
+    useEffect(() => {
+        if (products) {
+            let newTotalPrice = 0;
+            products.forEach(product => {
+                newTotalPrice += product.price * product.quantityInCart;
+            });
+            setTotalPrice(newTotalPrice);
+        }
+    }, [products]);
+    const handleCloseModal = () => {
+        setShowSearchProductModal(false);
+    }
+
+    const handleRemoveProductFromCart = (index: number) => {
+        const updatedProducts = [...products];
+        updatedProducts.splice(index, 1);
+        setProducts(updatedProducts);
+    }
+
     return (
         <Fragment>
             {
-                showSearchProductModal && (
-                    <ContainerModal>
-                        <HeaderModal title="Tìm kiếm sản phẩm" onClose={() => setShowSearchProductModal(false)}/>
-                        <BodyModal>
-                            <div className="grid grid-cols-12 gap-3">
-                                <div className="col-span-11">
-                                    <InputDefault placeholder="Nhập tên" ref={searchInputInModalRef}
-                                                  value={productName} type="text" name="search"
-                                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProductName(e.target.value)}
-                                                  />
-                                </div>
-                                <div>
-                                    <button
-                                        onClick={handleSearchProductByProductName}
-                                        className="bg-blue-500 hover:bg-blue-700 text-white w-full font-bold py-1 px-4 rounded">Tìm
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="pt-5">
-                            <div className="overflow-x-auto min-w-[900px]">
-                                    <table className="w-full table-auto">
-                                        <thead>
-                                        <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
-                                            <th className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white border-[#eee] border">
-                                                <div className="flex justify-center">
-                                                    <input type="checkbox"/>
-                                                </div>
-                                            </th>
-                                            {
-                                                modalColumns.map((modalColumns: string, index: number) => (
-                                                    <th key={"columns-" + index}
-                                                        className="min-w-[50px] px-2 py-2 font-medium text-black dark:text-white  border-[#eee] border text-center">
-                                                        {modalColumns}
-                                                    </th>
-                                                ))
-                                            }
-                                        </tr>
-                                        </thead>
-                                        <tbody className="text-left">
-                                        {products.map((product: Product, key: number) => (
-                                            <tr key={key} className="text-xs border border-[#eee]">
-                                            <td className="border border-[#eee] px-2 py-3 dark:border-strokedark border-x">
-                                                    <div className="flex justify-center">
-                                                        <input type="checkbox"/>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                                    <div className="flex flex-row gap-2">
-                                                        <div>
-                                                            <Image src={"/images/default/no-image.png"} alt=""
-                                                                   width={50}
-                                                                   height={50}
-                                                                   className="rounded border border-opacity-30 aspect-square object-cover"/>
-                                                        </div>
-                                                        <div>
-                                                            <a href={`/products/${product.id}`} target="_blank"
-                                                               className="font-bold text-sm text-blue-600 block mb-1">{product.name}</a>
-                                                            <div>SKU: {product.sku}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.packing}
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    <input defaultValue={1} min={1} max={product.quantity} type="number"
-                                                           className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                                    {product.quantity}
-                                                </td>
-
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
-                                                    <h5 className="font-medium text-black dark:text-white text-end">
-                                                        {new Intl.NumberFormat('vi-VN', {
-                                                            style: 'currency',
-                                                            currency: 'VND'
-                                                        }).format(product.price)}
-                                                    </h5>
-                                                </td>
-                                                <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">
-                                                    <h5 className="font-medium text-black dark:text-white text-end">
-                                                        {new Intl.NumberFormat('vi-VN', {
-                                                            style: 'currency',
-                                                            currency: 'VND'
-                                                        }).format(product.price)}
-                                                    </h5>
-                                                </td>
-
-                                            </tr>
-                                        ))}
-                                        </tbody>
-                                    </table>
-                            </div>
-                            </div>
-                        </BodyModal>
-                        <FooterModal/>
-                    </ContainerModal>
-                )
+                showSearchProductModal &&
+                <SearchProductModal onClose={handleCloseModal} products={products} setProducts={setProducts}/>
             }
             {
                 insertSuccess && (
@@ -369,7 +237,12 @@ const OrderForm = ({order}: Props) => {
                 <div
                     className="rounded-sm border border-stroke bg-white px-5 pb-2.5 py-2 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                     <div className="border-b border-opacity-30">
-                        <span className="text-sm text-black-2 font-bold mb-3 block">Thông tin chung</span>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm text-black-2 font-bold block">Thông tin khách hàng</span>
+                            <Tooltip message="Thông tin khách hàng dùng để giao hàng">
+                                <CircleHelp stroke="#27c1f0"/>
+                            </Tooltip>
+                        </div>
                     </div>
                     <div className="py-2">
                         <Select label="Tên khách hàng" name="name" defaultValue="Nguyễn Thị A">
@@ -392,7 +265,8 @@ const OrderForm = ({order}: Props) => {
                                    name="phone"/>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
-                            <Select label="Thành phố/Tỉnh" name="city" value={selectedProvince?.province_id || ''} onChange={handleChangeProvince}>
+                            <Select label="Thành phố/Tỉnh" name="city" value={selectedProvince?.province_id || ''}
+                                    onChange={handleChangeProvince}>
                                 <option value="">Chọn thành phố/tỉnh</option>
                                 {
                                     provinces.map((province: Province) => (
@@ -402,7 +276,8 @@ const OrderForm = ({order}: Props) => {
                                 }
                             </Select>
 
-                            <Select label="Quận/Huyện" name="district" value={selectedDistrict?.district_id || ''} onChange={handleChangeDistrict}>
+                            <Select label="Quận/Huyện" name="district" value={selectedDistrict?.district_id || ''}
+                                    onChange={handleChangeDistrict}>
                                 <option value="">Chọn quận/huyện</option>
                                 {
                                     districts.map((district: District) => (
@@ -412,7 +287,8 @@ const OrderForm = ({order}: Props) => {
                                 }
                             </Select>
 
-                            <Select label="Phường/xã" name="ward" value={selectedWard?.ward_id || ''} onChange={handleChangeWard}>
+                            <Select label="Phường/xã" name="ward" value={selectedWard?.ward_id || ''}
+                                    onChange={handleChangeWard}>
                                 <option value="">Chọn xã/phường</option>
                                 {
                                     wards.map((ward: Ward) => (
@@ -448,12 +324,15 @@ const OrderForm = ({order}: Props) => {
                         <span className="text-sm text-black-2 font-bold mb-3 block">Sản phẩm</span>
                     </div>
                     <div className="flex flex-col gap-2 py-3">
-                        <div className="flex flex-row justify-between gap-2 items-center">
-                            <InputDefault placeholder="Nhập SKU hoặc tên sản phẩm" type="text" name="" onChange={handleChangeSearchInput}/>
-                            <button className="appearance-none rounded px-4 py-1 btn-blue" type="button" onClick={() => setShowSearchProductModal(true)}>Tìm</button>
+                        <div className="flex flex-row justify-between gap-3 items-center">
+                            <InputDefault placeholder="Nhập tên sản phẩm" type="text" name="" value=""
+                                          onChange={handleChangeSearchInput}/>
+                            <button className="appearance-none rounded px-10 py-1 btn-blue" type="button"
+                                    onClick={() => setShowSearchProductModal(true)}>Tìm
+                            </button>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <table className="w-full table-auto">
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-auto min-h-50 min-w-[950px]">
                                 <thead>
                                 <tr className="bg-gray-2 text-left text-xs dark:bg-meta-4">
                                     {
@@ -467,8 +346,8 @@ const OrderForm = ({order}: Props) => {
                                 </tr>
                                 </thead>
                                 <tbody className="text-left">
-                                {productsExample.map((product: Product, key: number) => (
-                                    <tr key={key} className="text-xs border-b border-[#eee]">
+                                {products.map((product: ProductCart, index: number) => (
+                                    <tr key={index} className="text-xs border-b border-[#eee]">
                                         <td className="px-2 py-3 dark:border-strokedark border-[#eee] border">
                                             <div className="flex flex-row gap-2 ">
                                                 <div>
@@ -487,14 +366,16 @@ const OrderForm = ({order}: Props) => {
                                             {product.packing}
                                         </td>
                                         <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                            <input defaultValue={1} min={0} type="number"
-                                                   className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm"/>
+                                            <input defaultValue={product.quantityInCart} min={1} max={product.quantity}
+                                                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChangeQuantity(index, event)}
+                                                   type="number"
+                                                   className="border border-t-body rounded focus:outline-blue-500 py-1 px-3 text-sm  w-full"/>
                                         </td>
                                         <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             {product.quantity}
                                         </td>
 
-                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
                                             <h5 className="font-medium text-black dark:text-white">
                                                 {new Intl.NumberFormat('vi-VN', {
                                                     style: 'currency',
@@ -502,18 +383,20 @@ const OrderForm = ({order}: Props) => {
                                                 }).format(product.price)}
                                             </h5>
                                         </td>
-                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
+                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-end">
                                             <h5 className="font-medium text-black dark:text-white">
                                                 {new Intl.NumberFormat('vi-VN', {
                                                     style: 'currency',
                                                     currency: 'VND'
-                                                }).format(product.price)}
+                                                }).format(product.price * product.quantityInCart)}
                                             </h5>
                                         </td>
 
                                         <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             <div className="flex items-center space-x-3.5 justify-center">
-                                                <button className="hover:text-primary" type="button"><Trash/></button>
+                                                <button className="hover:text-primary" type="button"
+                                                        onClick={() => handleRemoveProductFromCart(index)}><Trash/>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -529,35 +412,120 @@ const OrderForm = ({order}: Props) => {
                     <div className="border-b border-opacity-30">
                         <span className="text-sm text-black-2 font-bold mb-3 block">Thanh toán</span>
                     </div>
-                    <div className="py-2">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="grid grid-cols-2 gap-3">
+                    <div className="py-4">
+                        <div className="grid grid-cols-3 gap-10">
+                            <div className="grid grid-cols-2 gap-10 col-span-2">
                                 <div>
                                     <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Hình thức nhận
                                         hàng
                                     </div>
-                                    <Radio label="Trực tiếp tại cửa hàng" name="shipping"
-                                           value="Trực tiếp tại cửa hàng"/>
-                                    <Radio label="Giao hàng" name="shipping" value="Giao hàng"/>
+                                    {/*<Radio label="Trực tiếp tại cửa hàng" name="shipping"*/}
+                                    {/*       value="Trực tiếp tại cửa hàng"/>*/}
+                                    {/*<Radio label="Giao hàng" name="shipping" value="Giao hàng"/>*/}
+
+                                    <div className="flex flex-col gap-3">
+                                        <label
+                                            htmlFor="shipping1"
+                                            className="text-slate-700 has-[:checked]:ring-blue-500 has-[:checked]:text-blue-500 has-[:checked]:bg-neutral-100 grid grid-cols-[24px_1fr_auto] items-center gap-6 rounded-lg p-3 ring-1 ring-transparent hover:bg-slate-100">
+                                            <HandHelping/>
+                                            Trực tiếp tại cửa hàng
+                                            <input type="radio"
+                                                   id="shipping1"
+                                                   value="Banking"
+                                                   name="shipping"
+                                                   className="box-content h-1.5 w-1.5 appearance-none rounded-full border-[5px] border-white bg-white bg-clip-padding outline-none ring-1 ring-gray-950/10 checked:border-blue-500 checked:ring-blue-500"/>
+                                        </label>
+                                        <label
+                                            htmlFor="shipping2"
+                                            className="text-slate-700 has-[:checked]:ring-blue-500 has-[:checked]:text-blue-500 has-[:checked]:bg-neutral-100 grid grid-cols-[24px_1fr_auto] items-center gap-6 rounded-lg p-3 ring-1 ring-transparent hover:bg-slate-100">
+                                            <Truck/>
+                                            Giao hàng
+                                            <input type="radio"
+                                                   id="shipping2"
+                                                   value="Momo"
+                                                   name="shipping"
+                                                   className="box-content h-1.5 w-1.5 appearance-none rounded-full border-[5px] border-white bg-white bg-clip-padding outline-none ring-1 ring-gray-950/10 checked:border-blue-500 checked:ring-blue-500"/>
+                                        </label>
+                                    </div>
+
                                 </div>
                                 <div>
                                     <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Hình thức thanh
                                         toán
                                     </div>
-                                    <Radio label="Tiền mặt" name="payment" value="Tiền mặt"/>
-                                    <Radio label="Chuyển khoản" name="payment" value="Chuyển khoản"/>
-                                    <Radio label="Momo" name="payment" value="Momo"/>
+                                    <div className="flex flex-col gap-3">
+                                        <label
+                                            htmlFor="paymentMoney"
+                                            className="text-slate-700 has-[:checked]:ring-blue-500 has-[:checked]:text-blue-500 has-[:checked]:bg-neutral-100 grid grid-cols-[24px_1fr_auto] items-center gap-6 rounded-lg p-3 ring-1 ring-transparent hover:bg-slate-100">
+                                            <CircleDollarSign/>
+                                            Tiền mặt khi nhận hàng
+                                            <input type="radio"
+                                                   name="payment"
+                                                   id="paymentMoney"
+                                                   value="Money"
+                                                   className="box-content h-1.5 w-1.5 appearance-none rounded-full border-[5px] border-white bg-white bg-clip-padding outline-none ring-1 ring-gray-950/10 checked:border-blue-500 checked:ring-blue-500"/>
+                                        </label>
+                                        <label
+                                            htmlFor="paymentBanking"
+                                            className="text-slate-700 has-[:checked]:ring-blue-500 has-[:checked]:text-blue-500 has-[:checked]:bg-neutral-100 grid grid-cols-[24px_1fr_auto] items-center gap-6 rounded-lg p-3 ring-1 ring-transparent hover:bg-slate-100">
+                                            <CreditCard/>
+                                            Chuyển khoản
+                                            <input type="radio"
+                                                   id="paymentBanking"
+                                                   value="Banking"
+                                                   name="payment"
+                                                   className="box-content h-1.5 w-1.5 appearance-none rounded-full border-[5px] border-white bg-white bg-clip-padding outline-none ring-1 ring-gray-950/10 checked:border-blue-500 checked:ring-blue-500"/>
+                                        </label>
+                                        <label
+                                            htmlFor="paymentMomo"
+                                            className="text-slate-700 has-[:checked]:ring-blue-500 has-[:checked]:text-blue-500 has-[:checked]:bg-neutral-100 grid grid-cols-[24px_1fr_auto] items-center gap-6 rounded-lg p-3 ring-1 ring-transparent hover:bg-slate-100">
+                                            <CreditCard/>
+                                            Momo
+                                            <input type="radio"
+                                                   id="paymentMomo"
+                                                   value="Momo"
+                                                   name="payment"
+                                                   className="box-content h-1.5 w-1.5 appearance-none rounded-full border-[5px] border-white bg-white bg-clip-padding outline-none ring-1 ring-gray-950/10 checked:border-blue-500 checked:ring-blue-500"/>
+                                        </label>
+                                    </div>
                                 </div>
+
+
                                 <div className="col-span-2">
-                                    <TextArea label="Ghi chú" placeholder="Nhập ghi chú cho đơn hàng" name="note"
+                                    <TextArea label="Ghi chú" placeholder="Ví dụ: Giao sớm" name="note"
                                               feedback=""/>
                                 </div>
                             </div>
-                            <div>
-                                <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Tổng tiền</div>
-                                <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Giảm giá</div>
-                                <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Phí vận chuyển</div>
-                                <div className="tracking-wide text-gray-700 text-sm font-bold mb-2">Thành tiền</div>
+
+                            <div className="grid grid-cols-2 gap-3 h-fit">
+                                <div className="tracking-wide text-blue-500 text-lg font-bold">Tổng tiền hàng:</div>
+                                <div className="tracking-widetext-blue-500 text-lg font-bold text-end">
+                                    {new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND'
+                                    }).format(totalPrice)}
+                                </div>
+                                <div className="tracking-wide text-red text-lg font-bold">Giảm giá:</div>
+                                <div className="tracking-wide text-red text-lg font-bold text-end">
+                                    {new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND'
+                                    }).format(0)}
+                                </div>
+                                <div className="tracking-wide text-gray-500 text-lg font-bold">Phí vận chuyển:</div>
+                                <div className="tracking-wide text-gray-500 text-lg font-bold text-end">
+                                    {new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND'
+                                    }).format(0)}
+                                </div>
+                                <div className="tracking-wide text-green-500 text-xl font-bold mb-2">Thành tiền:</div>
+                                <div className="tracking-wide text-green-500 text-xl font-bold mb-2 text-end">
+                                    {new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND'
+                                    }).format(totalPrice)}
+                                </div>
                             </div>
                         </div>
                     </div>

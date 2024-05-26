@@ -1,22 +1,18 @@
 "use client"
-import {ArrowDownToLine, Eye, Seach, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import {Eye, Trash} from "@/components/Icons";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
-import {Provider, Warehouse} from "@/models/Model";
+import {Warehouse} from "@/models/Model";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import {deleteData, getData} from "@/services/APIService";
-import {
-    API_DELETE_WAREHOUSE,
-    API_GET_ALL_PROVIDERS,
-    API_GET_ALL_WAREHOUSES
-} from "@/config/api";
-import SuccessModal from "@/components/Modal/SuccessModal";
+import {API_DELETE_WAREHOUSE, API_GET_ALL_WAREHOUSES} from "@/config/api";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
-import warehouse from "@/components/Icons/Warehouse";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
-const statusOptions : Option[] = [
+const statusOptions: Option[] = [
     {
         key: "",
         value: "Tất cả trạng thái"
@@ -35,47 +31,82 @@ const statusOptions : Option[] = [
     },
 ]
 
-const filteredOptions : Option[] = [
+const filteredOptions: Option[] = [
     {
         key: "name",
         value: "Tên nhà kho"
     },
     {
-        key: "sku",
+        key: "id",
         value: "Mã nhà kho"
     },
 ]
 
-const TableWarehouse = () => {
+export type TableWarehouseHandle = {
+    exportWarehouses: (type: string) => void;
+}
+
+const TableWarehouse = forwardRef((props, ref) => {
     const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
     const [warehouseToDeleted, setWarehouseToDeleted] = useState<Warehouse | null>(null);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState<boolean>(false);
     const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
-    const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [phoneFilter, setPhoneFilter] = useState<string>('');
+    const [searchValue, setSearchValue] = useState<string>("");
+
+
+    useImperativeHandle(ref, () => ({
+        exportWarehouses
+    }));
+
+    const formatDataForExport = (warehouses: Warehouse[]) => {
+        return warehouses.map((warehouse) => ({
+            ["Mã kho"]: warehouse.id,
+            ["Tên kho"]: warehouse.name,
+            ["Địa chỉ cụ thể"]: warehouse.address,
+            ["Tỉnh/Thành phố"]: warehouse.city,
+            ["Quận/Huyện"]: warehouse.district,
+            ["Xã/Phường"]: warehouse.ward,
+            ["Trạng thái"]: warehouse.status,
+            ["Ghi chú"]: warehouse.note,
+            ["Ngày tạo"]: new Date(warehouse.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(warehouse.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportWarehouses = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let warehousesToExport: Warehouse[];
+            if (type === 'ALL') {
+                warehousesToExport = await getData(API_GET_ALL_WAREHOUSES);
+            } else {
+                warehousesToExport = warehouses;
+            }
+            const dataToExport = formatDataForExport(warehousesToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Kho');
+            XLSX.writeFile(workbook, 'Kho.xlsx');
+        } catch (error: any) {
+            console.log(error);
+            toast.error("Đã có lỗi xảy ra");
+        }
+    }
+
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
-    }
-
-    const handleChangeCategoryOption = (category: string) => {
-        setCategoryOptionSelected(category);
     }
 
     const handleChangeFilteredOption = (type: string) => {
         setFilteredOptionSelected(type);
     }
 
-    const handleClickDeleteProduct = (warehouse: Warehouse) => {
-        setWarehouseToDeleted(warehouse);
-        setIsOpenDeleteModal(true);
-    }
-
     const handleDelete = async () => {
-        await deleteData (API_DELETE_WAREHOUSE + '/' + warehouseToDeleted?.id)
+        await deleteData(API_DELETE_WAREHOUSE + '/' + warehouseToDeleted?.id)
         setIsOpenDeleteModal(false);
         setIsOpenSuccessModal(true);
         getWarehouses(API_GET_ALL_WAREHOUSES);
@@ -92,35 +123,44 @@ const TableWarehouse = () => {
     }
 
     const getWarehouses = async (endpoint: string) => {
-        const newWarehouses : Warehouse[] = await getData(endpoint);
+        const newWarehouses: Warehouse[] = await getData(endpoint);
         setWarehouses(newWarehouses);
     }
 
 
     const handleResetFilters = () => {
-        setCategoryOptionSelected('');
         setStatusOptionSelected('');
+        setFilteredOptionSelected('');
+        setSearchValue('');
+        getWarehouses(API_GET_ALL_WAREHOUSES);
     }
 
     const handleSearch = () => {
-        let params : string = '';
+        const params = new URLSearchParams();
         if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+            params.append('status', statusOptionSelected);
         }
-        getWarehouses(API_GET_ALL_WAREHOUSES + params);
+        if (filteredOptionSelected !== '' && searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getWarehouses(`${API_GET_ALL_WAREHOUSES}?${params.toString()}`);
     }
+
     useEffect(() => {
         getWarehouses(API_GET_ALL_WAREHOUSES)
     }, []);
 
-    const columns : string[] = ["ID", "Tên", "Địa chỉ", "Trạng thái", "Thời gian hoạt động", "Ghi chú", ""];
+    const columns: string[] = ["ID", "Tên", "Địa chỉ", "Trạng thái", "Thời gian hoạt động", "Ghi chú", ""];
     return (
         <Fragment>
             {
-                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công" onClose={() => setIsOpenSuccessModal(false)}/>
+                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa sản phẩm thành công"
+                                                          onClose={() => setIsOpenSuccessModal(false)}/>
             }
             {
-                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`} message={`Bạn chắc chắn muốn xóa sản phẩm ${warehouseToDeleted?.id} - ${warehouseToDeleted?.name} - ${warehouseToDeleted?.address}. Hành động này sẽ không thể hoàn tác`} onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
+                isOpenDeleteModal && <DeleteModal title={`Xóa sản phẩm`}
+                                                  message={`Bạn chắc chắn muốn xóa sản phẩm ${warehouseToDeleted?.id} - ${warehouseToDeleted?.name} - ${warehouseToDeleted?.address}. Hành động này sẽ không thể hoàn tác`}
+                                                  onDelete={handleDelete} onClose={handleCloseDeleteModal}/>
             }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -128,7 +168,9 @@ const TableWarehouse = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}
+                                       selectedValue={filteredOptionSelected} inputSearchValue={searchValue}
+                                       onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
                     <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Trạng
@@ -217,7 +259,7 @@ const TableWarehouse = () => {
                                 </td>
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
                                     <div className="flex items-center space-x-3.5 justify-center">
-                                    <Link href={`/warehouses/${warehouses.id}`}
+                                        <Link href={`/warehouses/${warehouses.id}`}
                                               className="hover:text-primary"><Eye/></Link>
                                         <button className="hover:text-primary" type="button"
                                                 onClick={() => handleClickDeleteWarehouse(warehouses)}><Trash/></button>
@@ -251,6 +293,8 @@ const TableWarehouse = () => {
             </div>
         </Fragment>
     );
-};
+});
+
+TableWarehouse.displayName = 'TableWarehouse';
 
 export default TableWarehouse;

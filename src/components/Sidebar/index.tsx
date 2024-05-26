@@ -14,7 +14,7 @@ import {
     BaggageClaim,
     Warehouse,
     Fence,
-    PackageSearch, LayoutGird, ContactEmloyee
+    PackageSearch, LayoutGird, ContactEmployee
 } from "@/components/Icons";
 import {List} from "postcss/lib/list";
 import SquareGanttChart from "@/components/Icons/SquareGanttChart";
@@ -115,7 +115,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         {
             name: "Nhân viên",
             path: "employee",
-            icon: <ContactEmloyee/>
+            icon: <ContactEmployee/>
         },
         {
             name: "Khách hàng",
@@ -134,7 +134,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         },
     ]
 
-    const pathname = usePathname();
     const trigger = useRef<any>(null);
     const sidebar = useRef<any>(null);
 

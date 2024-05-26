@@ -1,16 +1,19 @@
 "use client"
 import {Eye, Trash} from "@/components/Icons";
-import React, {Fragment, useEffect, useState} from "react";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
-import {Category, Product} from "@/models/Model";
+import {Category} from "@/models/Model";
 import DeleteModal from "@/components/Modal/DeleteModal";
 import {deleteData, getData} from "@/services/APIService";
-import {API_DELETE_PRODUCT, API_GET_ALL_CATEGORIES, API_GET_ALL_PRODUCTS} from "@/config/api";
+import {API_DELETE_PRODUCT, API_GET_ALL_CATEGORIES, API_GET_ALL_MATERIALS, API_GET_ALL_PRODUCTS} from "@/config/api";
 import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import Image from "next/image";
 import InputMoneyDefault from "@/components/Inputs/InputMoneyDefault";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import DropdownInput from "@/components/Inputs/DropdownInput";
+import {Product} from "@/models/Product";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
 const statusOptions : Option[] = [
     {
@@ -42,8 +45,12 @@ const filteredOptions : Option[] = [
     },
 ]
 
+export type TableProductHandle = {
+    exportProducts: (type: string) => void;
+}
 
-const TableProduct = () => {
+
+const TableProduct = forwardRef((props, ref) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [categoryOptions, setCategoryOptions] = useState<Option[]>([{key: '', value: 'Tất cả danh mục'}]);
@@ -53,6 +60,50 @@ const TableProduct = () => {
     const [statusOptionSelected, setStatusOptionSelected] = useState<string>('');
     const [categoryOptionSelected, setCategoryOptionSelected] = useState<string>('');
     const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
+    const [searchValue, setSearchValue] = useState<string>("");
+    const [maxPrice, setMaxPrice] = useState<string>("");
+    const [minPrice, setMinPrice] = useState<string>("");
+
+
+    useImperativeHandle(ref, () => ({
+        exportProducts
+    }));
+
+    const formatDataForExport = (products: Product[]) => {
+        return products.map((product) => ({
+            ["Mã sản phẩm"]: product.id,
+            ["SKU"]: product.sku,
+            ["Tên sản phẩm"]: product.name,
+            ["Cách đóng gói"]: product.packing,
+            ["Giá"]: product.price,
+            ["Tồn kho"]: product.quantity,
+            ["Trọng lượng"]: product.weight,
+            ["Trạng thái"]: product.status,
+            ["Mô tả"]: product.description,
+            ["Ngày tạo"]: new Date(product.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(product.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportProducts = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let productsToExport: Product[];
+            if (type === 'ALL') {
+                productsToExport = await getData(API_GET_ALL_MATERIALS);
+            } else {
+                productsToExport = products;
+            }
+            const dataToExport = formatDataForExport(productsToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sản phẩm');
+            XLSX.writeFile(workbook, 'Sản phẩm.xlsx');
+        } catch (error: any) {
+            console.log(error);
+            toast.error("Đã có lỗi xảy ra");
+        }
+    }
 
     const handleChangeStatusOption = (status: string) => {
         setStatusOptionSelected(status);
@@ -96,14 +147,20 @@ const TableProduct = () => {
     const handleResetFilters = () => {
         setCategoryOptionSelected('');
         setStatusOptionSelected('');
+        setFilteredOptionSelected('');
+        setSearchValue('');
+        getProducts(API_GET_ALL_PRODUCTS);
     }
 
     const handleSearch = () => {
-        let params : string = '';
+        const params = new URLSearchParams();
         if (statusOptionSelected !== '') {
-            params += '?status=' + statusOptionSelected;
+            params.append('status', statusOptionSelected);
         }
-        getProducts(API_GET_ALL_PRODUCTS + params);
+        if (filteredOptionSelected !== '' && searchValue !== '') {
+            params.append(filteredOptionSelected, searchValue);
+        }
+        getProducts(`${API_GET_ALL_PRODUCTS}?${params.toString()}`);
     }
 
     const categoryToOption = (category: Category) : Option => {
@@ -142,7 +199,7 @@ const TableProduct = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption}/>
+                        <DropdownInput options={filteredOptions} onChangeDropdown={handleChangeFilteredOption} selectedValue={filteredOptionSelected} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
                     </div>
 
                     <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Trạng thái</label></div>
@@ -152,9 +209,9 @@ const TableProduct = () => {
 
                     <div className="flex items-center"><label className="text-sm font-bold">Giá</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <InputMoneyDefault placeholder="Nhập giá thấp nhất" name="price"/>
+                        <InputMoneyDefault placeholder="Nhập giá thấp nhất" name="minPrice"/>
                         <div className="text-2xl mx-3">-</div>
-                        <InputMoneyDefault placeholder="Nhập giá cao nhất" name="price"/>
+                        <InputMoneyDefault placeholder="Nhập giá cao nhất" name="maxPrice"/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -183,7 +240,7 @@ const TableProduct = () => {
                         </thead>
                         <tbody className="text-left ">
                         {products.map((product: Product, key: number) => (
-                            <tr key={key} className="text-xs">
+                            <tr key={key} className="text-xs odd:bg-white even:bg-slate-50">
                                 <td className="border-b border-[#eee] px-2 py-3 dark:border-strokedark border-x">
                                     <div className="flex justify-center">
                                         <input type="checkbox"/>
@@ -287,6 +344,8 @@ const TableProduct = () => {
             </div>
         </Fragment>
     );
-};
+});
+
+TableProduct.displayName = 'TableProduct';
 
 export default TableProduct;

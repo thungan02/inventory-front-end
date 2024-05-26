@@ -21,6 +21,7 @@ const Input = ({label, feedback, placeholder, type, name, error = false, min, ma
             <label className="block tracking-wide text-gray-700 text-sm font-bold mb-2"
                    htmlFor={id}>
                 {label}
+                {required && <span className="text-danger ml-2">*</span>}
             </label>
             <input onChange={onChange}
                    defaultValue={defaultValue}
