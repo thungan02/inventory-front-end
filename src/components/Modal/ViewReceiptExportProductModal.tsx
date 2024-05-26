@@ -12,7 +12,7 @@ interface ViewReceiptExportProductModalProps {
     receipt: ExportProductReceipt;
 }
 
-const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Trọng lượng", "Số  lượng nhập", "Sẵn có", "Giá (đ)"];
+const columns: string[] = ["Sản phẩm", "Quy cách đóng gói", "Trọng lượng", "Số  lượng xuất", "Giá (đ)"];
 
 interface ProductExportReceiptDetail {
     id: number;
@@ -38,14 +38,14 @@ const ViewReceiptExportProductModal = ({onClose, receipt}: ViewReceiptExportProd
 
     return (
         <ContainerModal>
-            <HeaderModal title="Chi tiết nhập kho" onClose={onClose}/>
+            <HeaderModal title="Chi tiết xuất kho" onClose={onClose}/>
             <BodyModal>
                 <div className="grid grid-cols-4 gap-x-10 gap-y-3">
                     <div className="font-bold">Mã hóa đơn:</div>
                     <div>{receipt.id}</div>
-                    <div className="font-bold">Loại nhập:</div>
+                    <div className="font-bold">Loại xuất:</div>
                     <div>{receipt.type === 'NORMAL' ? 'Nhập kho thông thường' : 'Nhập kho hoàn trả'}</div>
-                    <div className="font-bold">Ngày nhập:</div>
+                    <div className="font-bold">Ngày xuất:</div>
                     <div>{new Date(receipt.receipt_date).toLocaleDateString()}</div>
                     <div className="font-bold">Kho:</div>
                     <div>{receipt.warehouse.name}</div>
@@ -95,9 +95,6 @@ const ViewReceiptExportProductModal = ({onClose, receipt}: ViewReceiptExportProd
                                         </td>
                                         <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
                                             {detail.quantity}
-                                        </td>
-                                        <td className="px-2 py-3 dark:border-strokedark border border-[#eee] text-center">
-                                            {detail.product.quantity}
                                         </td>
 
                                         <td className="px-2 py-3 dark:border-strokedark border border-[#eee]">

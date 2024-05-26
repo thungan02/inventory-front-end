@@ -12,10 +12,11 @@ import {ExportProductReceipt, ExportProductReceiptDetail, Warehouse} from "@/mod
 import SuccessModal from "@/components/Modal/SuccessModal";
 import InputDefault from "@/components/Inputs/InputDefault";
 import {ProductCart} from "@/models/Product";
-import SearchProductModal from "@/components/Modal/SearchProductModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
 import {getData} from "@/services/APIService";
 import {API_GET_ALL_WAREHOUSES} from "@/config/api";
+import SearchProductInventoryModal from "@/components/Modal/SearchProductInventoryModal";
+import {toast} from "react-toastify";
 
 interface Props {
     receipt?: ExportProductReceipt;
@@ -24,13 +25,11 @@ interface Props {
 
 const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
     const router = useRouter();
-    const columns: string[] = ["Sản phẩm", "Quy cách đóng gói","Số lượng", "Khối lượng", "Giá", ""];
+    const columns: string[] = ["Sản phẩm", "Quy cách đóng gói","Số lượng", "Sẵn có", "Giá", ""];
     const [error, setError] = useState<string | null>(null);
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
 
     const [showSearchProductModal, setShowSearchProductModal] = useState<boolean>(false);
-    const [searchInputInModal, setSearchInputInModal] = useState<string>('')
-    const searchInputInModalRef = useRef<HTMLInputElement>(null);
 
     const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([]);
     const [warehouseSelected, setWarehouseSelected] = useState<string>("");
@@ -46,37 +45,35 @@ const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
 
     const handleChangeWarehouseOption = (warehouse: string) => {
         setWarehouseSelected(warehouse);
+        setProducts([]);
     }
 
-    const handleChangeSearchInput = (event : React.ChangeEvent<HTMLInputElement>) => {
-        if (!showSearchProductModal && searchInputInModalRef.current) {
+    const handleChangeSearchInput = () => {
+        if (!showSearchProductModal) {
             setShowSearchProductModal(true);
-            setSearchInputInModal(event.target.value);
-            searchInputInModalRef.current.focus();
         }
     }
 
     const onSubmitMaterialForm = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!products || products.length === 0) {
+            toast.error("Hãy chọn ít nhất 1 sản phẩm");
+            return;
+        }
         const formData = new FormData(event.currentTarget);
-        const name : string = formData.get('name') as string;
-        const provider : string = formData.get('provider') as string;
-
-        if (name.trim() === '') {
-            setError('Tên nguyên vật liệu là bắt buộc');
-            return;
-        }
-        if (provider.trim() === '') {
-            setError('Nhà cung cấp là bắt buộc');
-            return;
-        }
-
-        const method = (receipt ? "PUT" : "POST");
-
-        const response = await fetch(`http://localhost:8000/api/v1/products${receipt?.id ? "/" + receipt.id : ''}`,
+        formData.set('warehouse_id', warehouseSelected);
+        const formDataObj: { [key: string]: any } = {};
+        formData.forEach((value, key) => {
+            formDataObj[key] = value;
+        });
+        formDataObj.products = products.map(product => ({
+            product_id: product.id,
+            quantity: product.quantityInCart
+        }));
+        const response = await fetch(`http://localhost:8000/api/v1/export/products`,
             {
-                method: method,
-                body: JSON.stringify(Object.fromEntries(formData)),
+                method: "POST",
+                body: JSON.stringify(formDataObj),
                 headers: {
                     'content-type': 'application/json'
                 }
@@ -124,7 +121,7 @@ const ExportProductReceiptForm = ({receipt, receiptDetails} : Props) => {
         <Fragment>
             {
                 showSearchProductModal &&
-                <SearchProductModal onClose={() => setShowSearchProductModal(false)} products={products} setProducts={setProducts}/>
+                <SearchProductInventoryModal onClose={() => setShowSearchProductModal(false)} products={products} setProducts={setProducts} warehouseId={warehouseSelected}/>
             }
             {
                 insertSuccess && <SuccessModal title="Thành công" message="Thêm xuất kho thành phẩm thành công" onClickLeft={() => {router.back()}} onClickRight={() => {}}/>
