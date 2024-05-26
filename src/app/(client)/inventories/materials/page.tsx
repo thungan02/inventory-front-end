@@ -24,7 +24,7 @@ const InventoryMaterialPage = () => {
             {
                 showExportModal && (
                     <ContainerModal>
-                        <HeaderModal title="Xuất tồn kho sản phẩm" onClose={() => setShowExportModal(false)}/>
+                        <HeaderModal title="Xuất tồn kho nguyên vật liệu" onClose={() => setShowExportModal(false)}/>
                         <BodyModal>
                             <div className="flex items-center mb-4">
                                 <input id="exportAll" type="radio" value="ALL" name="exportType"

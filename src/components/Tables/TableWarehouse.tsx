@@ -20,26 +20,14 @@ const statusOptions: Option[] = [
     {
         key: "ENABLE",
         value: "Đang hoạt động"
-    },
-    {
-        key: "DISABLE",
-        value: "Không hoạt động"
-    },
-    {
-        key: "TEMPORARILY_SUSPENDED",
-        value: "Tạm ngưng"
-    },
+    }
 ]
 
 const filteredOptions: Option[] = [
     {
         key: "name",
         value: "Tên nhà kho"
-    },
-    {
-        key: "id",
-        value: "Mã nhà kho"
-    },
+    }
 ]
 
 export type TableWarehouseHandle = {
@@ -130,19 +118,21 @@ const TableWarehouse = forwardRef((props, ref) => {
 
     const handleResetFilters = () => {
         setStatusOptionSelected('');
-        setFilteredOptionSelected('');
+        setFilteredOptionSelected('name');
         setSearchValue('');
         getWarehouses(API_GET_ALL_WAREHOUSES);
     }
 
     const handleSearch = () => {
         const params = new URLSearchParams();
+        console.log(searchValue);
         if (statusOptionSelected !== '') {
             params.append('status', statusOptionSelected);
         }
         if (filteredOptionSelected !== '' && searchValue !== '') {
             params.append(filteredOptionSelected, searchValue);
         }
+        console.log(`${API_GET_ALL_WAREHOUSES}?${params.toString()}`);
         getWarehouses(`${API_GET_ALL_WAREHOUSES}?${params.toString()}`);
     }
 
@@ -273,8 +263,8 @@ const TableWarehouse = forwardRef((props, ref) => {
                 <div className="flex flex-row justify-between mt-4 mb-3">
                     <div>
                         <select
-                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                            <option selected value={10}>Hiển thị 10</option>
+                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600" defaultValue={10}>
+                            <option value={10}>Hiển thị 10</option>
                             <option value={20}>Hiển thị 20</option>
                             <option value={50}>Hiển thị 50</option>
                         </select>

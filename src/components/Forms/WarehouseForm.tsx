@@ -2,10 +2,7 @@
 import React, {FormEvent, Fragment, useEffect, useRef, useState} from 'react';
 import Input from "@/components/Inputs/Input";
 import Select from "@/components/Inputs/Select";
-import {ImageUp} from "@/components/Icons";
 import TextArea from "@/components/Inputs/TextArea";
-import FolderUp from "@/components/Icons/FolderUp";
-import Radio from "@/components/Inputs/Radio";
 import Alert from "@/components/Alert";
 import Link from "next/link";
 import {Warehouse} from "@/models/Model";
@@ -30,6 +27,13 @@ const WarehouseForm = ({warehouse} : Props) => {
     const [selectedDistrict, setSelectedDistrict] = useState<District>();
     const [selectedWard, setSelectedWard] = useState<Ward>();
     const [insertSuccess, setInsertSuccess] = useState<boolean>(false);
+    const [selectedStatus, setSelectedStatus] = useState<string>("ACTIVE");
+
+    useEffect(() => {
+        if (warehouse) {
+            setSelectedStatus(warehouse.status);
+        }
+    }, [warehouse]);
 
     useEffect(() => {
         const initialAddress = async () => {
@@ -125,9 +129,6 @@ const WarehouseForm = ({warehouse} : Props) => {
             formData.set('ward', selectedWard.ward_name);
         }
 
-        console.log(JSON.stringify(Object.fromEntries(formData)));
-
-
         const method = (warehouse ? "PUT" : "POST");
         const response = await fetch(`http://localhost:8000/api/v1/warehouses${warehouse?.id ? "/" + warehouse.id : ''}`,
             {
@@ -161,7 +162,6 @@ const WarehouseForm = ({warehouse} : Props) => {
         const getAllProvinces = async () => {
             const result: ProvinceResponse = await getData(API_GET_ALL_PROVINCES);
             setProvinces(result.results);
-            console.log(result.results);
         }
 
         getAllProvinces();
@@ -226,10 +226,9 @@ const WarehouseForm = ({warehouse} : Props) => {
                             </Select>
                         </div>
 
-                        <Select label="Trạng thái" name="status" defaultValue="ENABLE">
+                        <Select label="Trạng thái" name="status" value={selectedStatus} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value)}>
                             <option value="ENABLE">Đang hoạt động</option>
                             <option value="DISABLE">Không hoạt động</option>
-                            <option value="TEMPORARILY_SUSPENDED">Tạm ngưng</option>
                         </Select>
 
                         <div>

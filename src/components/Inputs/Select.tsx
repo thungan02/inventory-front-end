@@ -6,7 +6,7 @@ interface SelectProps {
     children: React.ReactNode;
     defaultValue?: string | number | readonly string[] | undefined;
     value?: string | number | readonly string[] | undefined;
-    onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => Promise<void> | undefined;
+    onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => Promise<void> | undefined | void;
 }
 
 const Select = ({label, name, children, defaultValue, onChange, value}: SelectProps) => {
