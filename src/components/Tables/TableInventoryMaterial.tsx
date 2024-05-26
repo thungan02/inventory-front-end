@@ -1,69 +1,88 @@
 "use client"
-import React, {forwardRef, Fragment, useEffect, useState} from "react";
+import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
 import Link from "next/link";
 import {getData} from "@/services/APIService";
-import {API_GET_ALL_INVENTORY_MATERIALS,} from "@/config/api";
-import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
+import {API_GET_ALL_INVENTORY_MATERIALS, API_GET_ALL_WAREHOUSES,} from "@/config/api";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
-import DropdownInput from "@/components/Inputs/DropdownInput";
-import {InventoryProduct} from "@/models/Product";
 import Image from "next/image";
 import {InventoryMaterial} from "@/models/Material";
+import {Warehouse} from "@/models/Model";
+import * as XLSX from "xlsx";
+import {toast} from "react-toastify";
 
-
-const roleOptions : Option[] = [
-    {
-        key: "",
-        value: "Tất cả"
-    },
-    {
-        key: "STOCKER",
-        value: "Thủ kho"
-    },
-    {
-        key: "ADMIN",
-        value: "Quản lý"
-    },
-    {
-        key: "SUPERADMIN",
-        value: "Giám đốc"
-    },
-    {
-        key: "SALES",
-        value: "Nhân viên bán hàng"
-    },
-]
-
-const filteredOptions : Option[] = [
-    {
-        key: "name",
-        value: "Tên khách hàng"
-    },
-    {
-        key: "phone",
-        value: "Số điện thoại"
-    },
-    {
-        key: "email",
-        value: "Email"
-    },
-]
+export type TableInventoryMaterialHandle = {
+    exportInventoryMaterials: (type: string) => void;
+}
 
 const TableInventoryMaterial = forwardRef((props, ref) => {
     const [inventories, setInventories] = useState<InventoryMaterial[]>([]);
-    const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
 
-    const [roleOptionSelected, setRoleOptionSelected] = useState<string>('');
-    const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [searchValue, setSearchValue] = useState<string>("");
+    const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([{key: "", value: "Tất cả"}])
+    const [warehouseSelected, setWarehouseSelected] = useState<string>("")
 
-    const handleChangeRoleOption = (status: string) => {
-        setRoleOptionSelected(status);
+    const handleChangeWarehouseOption = (warehouse: string) => {
+        setWarehouseSelected(warehouse);
     }
 
+    const getAllWarehouses = async () => {
+        const data : Warehouse[] = await getData(API_GET_ALL_WAREHOUSES);
+        const options : Option[] = data.map(warehouse => ({
+            key: warehouse.id.toString(),
+            value: `${warehouse.id} - ${warehouse.name}`
+        }));
+        options.unshift({ key: "", value: "Tất cả" });
+        setWarehouseSelected(options[0].key);
+        setWarehouseOptions(options);
+    }
 
-    const handleChangeFilteredOption = (type: string) => {
-        setFilteredOptionSelected(type);
+    useEffect(() => {
+        getAllWarehouses();
+    }, []);
+
+
+    useImperativeHandle(ref, () => ({
+        exportInventoryMaterials
+    }));
+
+    const formatDataForExport = (inventories: InventoryMaterial[]) => {
+        return inventories.map((inventory) => ({
+            ["ID"]: inventory.Material.id,
+            ["Tên vật liệu"]: inventory.Material.name,
+            ["Đơn vị"]: inventory.Material.unit,
+            ["Xuất xứ"]: inventory.Material.origin,
+            ["Tổng tồn kho"]: inventory.Material.quantity,
+            ["Trọng lượng"]: inventory.Material.weight,
+            ["Trạng thái"]: inventory.Material.status,
+            ["Mã kho"]: inventory.warehouse.id,
+            ["Tên kho"]: inventory.warehouse.name,
+            ["Địa chỉ"]: inventory.warehouse.address,
+            ["Tỉnh/Thành phố"]: inventory.warehouse.city,
+            ["Quận/Huyện"]: inventory.warehouse.district,
+            ["Xã/Phường"]: inventory.warehouse.ward,
+            ["Số lượng trong kho hiện tại"]: inventory.quantity_available,
+            ["Ngày tạo"]: new Date(inventory.created_at).toLocaleString(),
+            ["Ngày cập nhật"]: new Date(inventory.updated_at).toLocaleString(),
+        }));
+    };
+
+    const exportInventoryMaterials = async (type: 'ALL' | 'FILTERED') => {
+        try {
+            let inventoriesToExport: InventoryMaterial[];
+            if (type === 'ALL') {
+                inventoriesToExport = await getData(API_GET_ALL_INVENTORY_MATERIALS);
+            } else {
+                inventoriesToExport = inventories;
+            }
+            const dataToExport = formatDataForExport(inventoriesToExport);
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils?.json_to_sheet(dataToExport);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Tồn kho nguyên vật liệu');
+            XLSX.writeFile(workbook, 'Tồn kho nguyên vật liệu.xlsx');
+        } catch (error: any) {
+            console.log(error);
+            toast.error("Đã có lỗi xảy ra");
+        }
     }
 
     const getInventories = async (endpoint: string) => {
@@ -72,19 +91,15 @@ const TableInventoryMaterial = forwardRef((props, ref) => {
     }
 
     const handleResetFilters = () => {
-        setRoleOptionSelected('');
-        setFilteredOptionSelected('');
-        setSearchValue('');
+        setWarehouseSelected('');
         getInventories(API_GET_ALL_INVENTORY_MATERIALS)
     }
 
     const handleSearch = () => {
         const params = new URLSearchParams();
-        if (roleOptionSelected !== '') {
-            params.append('role', roleOptionSelected);
-        }
-        if (filteredOptionSelected !== '' && searchValue !== '') {
-            params.append(filteredOptionSelected, searchValue);
+        if (warehouseSelected !== '') {
+            params.append('warehouse_id', warehouseSelected);
+            console.log(warehouseSelected);
         }
         getInventories(`${API_GET_ALL_INVENTORY_MATERIALS}?${params.toString()}`);
     }
@@ -93,25 +108,16 @@ const TableInventoryMaterial = forwardRef((props, ref) => {
         getInventories(API_GET_ALL_INVENTORY_MATERIALS)
     }, []);
 
-    const columns : string[] = ["ID", "Sản phẩm", "Kho", "Số lượng tồn kho", "Số lượng lưu kho tối thiểu"];
+    const columns : string[] = ["ID", "Nguyên liệu", "Kho", "Số lượng tồn kho", "Tổng tồn kho của tất cả kho","Số lượng lưu kho tối thiểu"];
     return (
         <Fragment>
-            {
-                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhân viên thành công" onClose={() => setIsOpenSuccessModal(false)}/>
-            }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
-
-                    <div className="flex items-center"><label className="text-sm font-bold">Lọc</label></div>
-                    <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <DropdownInput options={filteredOptions} selectedValue={filteredOptionSelected} onChangeDropdown={handleChangeFilteredOption} inputSearchValue={searchValue} onChangeInputSearch={(event: React.ChangeEvent<HTMLInputElement>) => setSearchValue(event.target.value)}/>
-                    </div>
-
                     <div className="flex items-center"><label className="text-sm font-bold" htmlFor="searchStatus">Kho</label></div>
                     <div className="xsm:col-span-10 sm:col-span-5 flex flex-row items-center justify-center">
-                        <SelectDefault options={roleOptions} id="searchStatus" onChange={handleChangeRoleOption}
-                                       selectedValue={roleOptionSelected}/>
+                        <SelectDefault options={warehouseOptions} id="searchStatus" onChange={handleChangeWarehouseOption}
+                                       selectedValue={warehouseSelected}/>
                     </div>
 
                     <div className="col-span-full flex flex-row gap-3">
@@ -170,6 +176,11 @@ const TableInventoryMaterial = forwardRef((props, ref) => {
                                         {inventory.quantity_available}
                                     </h5>
                                 </td>
+                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark text-end">
+                                    <h5 className="font-medium text-black dark:text-white">
+                                        {inventory.Material.quantity}
+                                    </h5>
+                                </td>
 
                                 <td className="border border-[#eee] px-2 py-3 dark:border-strokedark text-end">
                                     <p className="text-black dark:text-white">
@@ -184,8 +195,8 @@ const TableInventoryMaterial = forwardRef((props, ref) => {
                 <div className="flex flex-row justify-between mt-4 mb-3">
                     <div>
                         <select
-                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600">
-                            <option selected value={10}>Hiển thị 10</option>
+                            className="rounded bg-gray-50 text-xs py-2 px-2 font-bold focus:outline-none border border-gray-500 text-gray-600" defaultValue={10}>
+                            <option value={10}>Hiển thị 10</option>
                             <option value={20}>Hiển thị 20</option>
                             <option value={50}>Hiển thị 50</option>
                         </select>

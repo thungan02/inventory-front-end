@@ -3,17 +3,9 @@ import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} f
 import Link from "next/link";
 import {getData} from "@/services/APIService";
 import {API_GET_ALL_INVENTORY_PRODUCTS, API_GET_ALL_WAREHOUSES,} from "@/config/api";
-import DeleteSuccessModal from "@/components/Modal/DeleteSuccessModal";
 import SelectDefault, {Option} from "@/components/Inputs/SelectDefault";
-import DropdownInput from "@/components/Inputs/DropdownInput";
 import {InventoryProduct} from "@/models/Product";
 import Image from "next/image";
-import {SquarePen} from "@/components/Icons";
-import ContainerModal from "@/components/Modal/ContainerModal";
-import HeaderModal from "@/components/Modal/HeaderModal";
-import BodyModal from "@/components/Modal/BodyModal";
-import FooterModal from "@/components/Modal/FooterModal";
-import Input from "@/components/Inputs/Input";
 import * as XLSX from "xlsx";
 import {toast} from "react-toastify";
 import {Warehouse} from "@/models/Model";
@@ -22,14 +14,10 @@ export type TableInventoryProductHandle = {
     exportInventoryProducts: (type: string) => void;
 }
 
+const columns : string[] = ["ID", "Sản phẩm", "Kho", "Số lượng tồn kho", "Tổng số lượng tất cả các kho","Số lượng lưu kho tối thiểu"];
+
 const TableInventoryProduct = forwardRef((props, ref) => {
     const [inventories, setInventories] = useState<InventoryProduct[]>([]);
-    const [inventoryToEdit, setInventoryToEdit] = useState<InventoryProduct>();
-    const [isOpenSuccessModal, setIsOpenSuccessModal] = useState<boolean>(false);
-
-    const [roleOptionSelected, setRoleOptionSelected] = useState<string>('');
-    const [filteredOptionSelected, setFilteredOptionSelected] = useState<string>('name');
-    const [searchValue, setSearchValue] = useState<string>("");
 
     const [warehouseOptions, setWarehouseOptions] = useState<Option[]>([{key: "", value: "Tất cả"}])
     const [warehouseSelected, setWarehouseSelected] = useState<string>("")
@@ -117,39 +105,12 @@ const TableInventoryProduct = forwardRef((props, ref) => {
         getInventories(`${API_GET_ALL_INVENTORY_PRODUCTS}?${params.toString()}`);
     }
 
-    const [showEditModal, setShowEditModal] = useState<boolean>(false);
-    const handleClickEdit = (inventory: InventoryProduct) => {
-        setInventoryToEdit(inventory);
-        setShowEditModal(true);
-    }
-    const handleEdit = () => {
-
-        getInventories(API_GET_ALL_INVENTORY_PRODUCTS);
-    }
-
     useEffect(() => {
         getInventories(API_GET_ALL_INVENTORY_PRODUCTS)
     }, []);
 
-    const columns : string[] = ["ID", "Sản phẩm", "Kho", "Số lượng tồn kho", "Tổng số lượng tất cả các kho","Số lượng lưu kho tối thiểu", ""];
     return (
         <Fragment>
-            {
-                showEditModal && (
-                    <ContainerModal>
-                        <HeaderModal title="Cập nhật lưu kho" onClose={() => setShowEditModal(false)}/>
-                        <BodyModal>
-                            <div className="text-sm mb-5">Bạn điều chỉnh lưu kho cho sản phẩm  <span className="font-bold text-red">ID: {inventoryToEdit?.id}, Tên: {inventoryToEdit?.product.name}</span> tại kho <span className="font-bold">{inventoryToEdit?.warehouse.name}</span></div>
-                            <Input label="Số lượng lưu kho tối thiểu" feedback="" placeholder="Nhập số lượng lưu kho tối thiểu để thông báo nhập kho. VD: 0" type="number" name="" min={0} defaultValue={inventoryToEdit?.minimum_stock_level}/>
-                        </BodyModal>
-                        <FooterModal onClose={() => setShowEditModal(false)} disabledRightBtn={false}
-                                     onClickRightBtn={handleEdit} messageRightBtn="Cập nhật"/>
-                    </ContainerModal>
-                )
-            }
-            {
-                isOpenSuccessModal && <DeleteSuccessModal title="Thành công" message="Xóa nhân viên thành công" onClose={() => setIsOpenSuccessModal(false)}/>
-            }
             <div
                 className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
                 <div className="grid sm:grid-cols-12 gap-3 mb-5">
@@ -225,15 +186,6 @@ const TableInventoryProduct = forwardRef((props, ref) => {
                                     <p className="text-black dark:text-white">
                                         {inventory.minimum_stock_level}
                                     </p>
-                                </td>
-
-                                <td className="border border-[#eee] px-2 py-3 dark:border-strokedark">
-                                    <div className="flex items-center space-x-3.5 justify-center text-blue-600">
-                                        <button className="hover:text-primary" type="button"
-                                                onClick={() => handleClickEdit(inventory)}>
-                                            <SquarePen/>
-                                        </button>
-                                    </div>
                                 </td>
                             </tr>
                         ))}
